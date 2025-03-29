@@ -1,5 +1,6 @@
 from customtkinter import *
 import tkinter as tk
+from tkinter import messagebox
 from CTkListbox import *
 
 #pip install customtkinter
@@ -34,8 +35,27 @@ class IHM():
         self.menuFormButton.pack(fill="x", pady=10)
     
     def displayFormulaire(self):
-        print("Code du formulaire ici")
+        
         return
+
+    def close_window():
+    # Récupération des réponses
+    reponses = {
+        "Sexe": combobox_sex.get(),
+        "Couleur de peau": combobox_peau.get(),
+        "Couleur des cheveux": combobox_cheveux.get(),
+        "Texture des cheveux": combobox_texture.get(),
+        "Corpulence": combobox_corpu.get(),
+        "Lunettes": combobox_lunettes.get(),
+        "Âge": combobox_age.get(),
+        "Pilosité": combobox_pilosité.get()
+    }
+    if "Sélectionner" in reponses.values():
+        messagebox.showerror("", "Veuillez répondre à toutes les questions.")
+    else:
+        messagebox.showinfo("", "Vos réponses ont bien été enregistrées.")
+        app.destroy()
+    return reponses
 
 if __name__ == "__main__":
     test = IHM()
