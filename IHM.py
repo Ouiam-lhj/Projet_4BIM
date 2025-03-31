@@ -139,7 +139,10 @@ class IHM():
         self.principalMainframe = CTkFrame(self.root, fg_color="#38393b", border_width = 0)
         self.menuMainframe = CTkFrame(self.root, width= 200)
         self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#00FF00", height = 70)
-        self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#0000FF", height = 400)
+        self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff", height = 500)
+
+        #self.titleLabel = CTkLabel(self.photosFrame, text="TEST", font=("Arial", 30), text_color="#000000")
+        #self.titleLabel.pack(expand=True)
 
         self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#FF0000", height = 50)
         self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFC0CB", height = 50)
@@ -176,7 +179,9 @@ class IHM():
         app.geometry("520x600")
         app.configure(bg="#f5f5f5")
         app.grab_set()
-
+        app.grid_rowconfigure(0, weight=1)
+        app.grid_columnconfigure(0, weight=1)
+        
         # Scrollable frame
         scroll = CTkScrollableFrame(app, width=500, height=600, fg_color="#ffffff")
         scroll.grid(row=0, column=0, columnspan=3, sticky="nsew")
