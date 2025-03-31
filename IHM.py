@@ -10,6 +10,8 @@ import numpy as np
 #pip install CTkListbox
 #pip install tkinter
 #pip install PIL
+class ImageDisplayError(Exception):
+    pass
 
 class DynamicGrid():
     
@@ -21,10 +23,11 @@ class DynamicGrid():
         self.height = grid_height
         self.margin = margin
         self.frames = []
+        self.selected_images = []
         self.rows = 0
         self.columns = 0
+        self.isEmpty = True
     
-
     def get_grid_dimensions(self,n):
         # Le nombre de lignes sera la partie entière de la racine carrée
         l = int(np.floor(np.sqrt(n)))
@@ -68,33 +71,59 @@ class DynamicGrid():
     def displayImages(self):
         # La frame doit être un objet CTkFrame
         # images est une liste d'images
+        if (self.images == []):
+            raise ImageDisplayError
+        
+        if (self.isEmpty == False):
+            self.destroyGrid()
+
         images_displayed=0
 
         print(self.images)
         nb_images = len(self.images)
-        print(nb_images)
         self.get_grid_dimensions(nb_images)
 
-        print("Columns = " + str(self.columns))
-        print("Rows = " + str(self.rows))
         width_frame = self.width/self.rows
         height_frame = self.height/self.columns
         
-        images_size = max(width_frame/self.columns * (1 - self.margin), height_frame/self.rows * (1 - self.margin))
+        images_size = max(width_frame/self.rows , height_frame/self.columns)
+        self.loadImages(self.links)
         self.ToCTkImage(images_size)
 
         for i in range(self.columns):
-            print('i = ', i)
-            currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="#02D8E8")
+            currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="transparent")
             currentFrame.pack(expand=True, fill="both", side="left")
             self.frames.append(currentFrame)
             for j in range(images_displayed, images_displayed + self.rows):
-                print('j = ', j)
-                button = CTkLabel(currentFrame, image= self.images[j],width=images_size, height=images_size)
+                button = CTkButton(currentFrame, image= self.images[j],width=images_size, height=images_size, fg_color="transparent", hover=True, hover_color="#000000",text='')
                 button.pack(side = TOP)
-                button.image = self.images[j]
+                button.configure(command = (lambda button=button, img=self.images[j] : self.changeButtonColor(button, img)))
             images_displayed += self.rows
+        self.isEmpty = False
+    
+    def destroyGrid(self):
+        print("destroyGrid has been called !")
+        for frame in self.frames:
+            print(frame)
+            frame.destroy()
+        self.isEmpty = True
+        
+    
+    def changeButtonColor(self, button, image):
+        current_color = button.cget("fg_color")
+        new_color = "#000000" if current_color == "transparent" else "transparent"
+        button.configure(fg_color=new_color)
 
+        if image not in self.selected_images:
+            self.selected_images.append(image)
+        else:
+            if image in self.selected_images:
+                self.selected_images.remove(image)
+    
+    def get_selected_images(self):
+        print(self.selected_images)
+        return self.selected_images
+    
 class IHM():
 
     def __init__(self):
@@ -111,19 +140,35 @@ class IHM():
         self.menuMainframe = CTkFrame(self.root, width= 200)
         self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#00FF00", height = 70)
         self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#0000FF", height = 400)
+
         self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#FF0000", height = 50)
+        self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFC0CB", height = 50)
+        self.middleSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFFF00", height = 50)
+        self.rightSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FF4500", height = 50)
+
 
         self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
-        self.photo = CTkButton(self.menuMainframe, text="Pour toi Mathis", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
+        self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.get_selected_images(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
+        self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération précédente", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
+        self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération Suivante", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
         
         self.principalMainframe.pack(expand=True, fill="both", side="right")
         self.menuMainframe.pack(fill="y", side="left")
         self.titleFrame.pack(expand=True, fill="both", side="top")
         self.photosFrame.pack(expand=True, fill="both", side="top")
         self.buttonsFrame.pack(expand=True, fill="both", side="top")
+        self.leftSideButtonFrame.pack(expand=True, fill="both", side="left")
+        self.middleSideButtonFrame.pack(expand=True, fill="both", side="left")
+        self.rightSideButtonFrame.pack(expand=True, fill="both", side="left")
+        self.previousGenButton.pack(side="left")
+        self.newGenButton.pack(side="left")
+        self.nextGenButton.pack(side="left")
 
         self.menuFormButton.pack(fill="x", pady=10)
         self.photo.pack(fill="x", pady=15)
+
 
     def displayFormulaire(self):
         app = CTkToplevel(self.root)
@@ -240,8 +285,16 @@ class IHM():
         return reponses
 
     def displayGrid(self):
-        self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
+        self.grid.setHeight(self.photosFrame.winfo_height())
+        self.grid.setWidth(self.photosFrame.winfo_width())
+
         self.grid.displayImages()
+    
+    def nextGen(self):
+        print("Pas implémenté")
+    
+    def previousGen(self):
+        print("Pas implémenté")
 
 
 if __name__ == "__main__":
