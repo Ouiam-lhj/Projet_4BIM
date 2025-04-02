@@ -5,11 +5,14 @@ from tkinter import messagebox
 from CTkListbox import *
 from PIL import Image, ImageTk
 import numpy as np
+from CTkSpinbox import * 
 
 #pip install customtkinter
 #pip install CTkListbox
 #pip install tkinter
 #pip install PIL
+#pip install CTkSpinbox
+
 class ImageDisplayError(Exception):
     pass
 
@@ -148,6 +151,8 @@ class IHM():
 
 
         self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.menuExportButton = CTkButton(self.menuMainframe, text="Exporter", command=self.displayExportWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
         self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.get_selected_images(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
@@ -167,6 +172,8 @@ class IHM():
         self.nextGenButton.pack(side="left")
 
         self.menuFormButton.pack(fill="x", pady=10)
+        self.menuExportButton.pack(fill="x", pady=10)
+        self.menuParamButton.pack(fill="x", pady=10)
         self.photo.pack(fill="x", pady=15)
 
 
@@ -295,6 +302,60 @@ class IHM():
     
     def previousGen(self):
         print("Pas implémenté")
+    
+    def displayExportWindow(self):
+        exp_window = CTkToplevel(self.root)
+        exp_window.title("Exporter")
+        exp_window.geometry("450x300")
+        exp_window.grab_set()
+
+    def displayParameterWindow(self):
+        # Fenêtre qui correspond aux différents paramètres de l'applications.
+        change = True
+        self.disp_window = CTkToplevel(self.root)
+        self.disp_window.title("Paramètres")
+        self.disp_window.geometry("300x150")
+        self.disp_window.grab_set()
+
+        topFrame = CTkFrame(self.disp_window)
+        midFrame = CTkFrame(self.disp_window)
+        bottomFrame = CTkFrame(self.disp_window)
+
+        title = CTkLabel(topFrame, text="Paramètres", font=("Arial", 30), wraplength=480)
+
+        textMP = CTkLabel(midFrame,text="Sélection multiple : ")
+        self.checkVarMP = customtkinter.StringVar(value="on")
+        checkboxSelecMP = customtkinter.CTkCheckBox(midFrame, text='',command=lambda : print(self.checkVarMP.get()),
+                                     variable=self.checkVarMP, onvalue="on", offvalue="off")
+        
+        textImage = CTkLabel(midFrame, text="Nombre d'images par générations : ")
+        self.nbGenImages = customtkinter.IntVar(value=6)
+        spinboxImages = CTkSpinbox(midFrame, variable = self.nbGenImages, min_value = 4, max_value= 9, width=60, height=15,border_width=0)
+
+        validateButton = CTkButton(bottomFrame, text="Sauvegarder", command = lambda window=self.disp_window: print(self.disp_window.winfo_geometry()))
+
+        self.disp_window.grid_columnconfigure((0,1,2), weight=1) 
+        topFrame.grid_columnconfigure(0, weight=1)
+        midFrame.grid_columnconfigure((0,1,2), weight=1)
+        bottomFrame.grid_columnconfigure(0, weight=1)
+        topFrame.grid(row = 0, sticky="nsew")
+        midFrame.grid(row = 1, sticky="nsew")
+        bottomFrame.grid(row = 2, sticky="nsew")
+
+        title.grid(column = 0, row = 0, sticky="nsew")
+        textMP.grid(column = 0, row = 0, sticky="nsew")
+        checkboxSelecMP.grid(column = 1, row = 0, sticky="nsew")
+        textImage.grid(column = 0, row=1, sticky="nsew")
+        spinboxImages.grid(column = 1, row = 1, sticky="nsew")
+        validateButton.grid(column= 0, padx = 20, pady=10)
+        self.disp_window.protocol("WM_DELETE_WINDOW", lambda val=change : self.destroyParam(change))
+    
+    def destroyParam(self, changed):
+        if changed:
+            messagebox.askquestion("" , "Souhaitez-vous continuer sans enregistrer ?")
+        self.disp_window.destroy()
+        
+
 
 
 if __name__ == "__main__":
