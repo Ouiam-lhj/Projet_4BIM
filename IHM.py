@@ -6,6 +6,8 @@ from CTkListbox import *
 from PIL import Image, ImageTk
 import numpy as np
 from CTkSpinbox import * 
+import io
+
 
 #pip install customtkinter
 #pip install CTkListbox
@@ -18,10 +20,12 @@ class ImageDisplayError(Exception):
 
 class DynamicGrid():
     
+    
     def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01, unique_selection = False):
         self.parentFrame = parentFrame
         self.links = links # Modifier links par les vecteurs latents. Si liens, pas nécessaire de modifier
-        self.loadImages(links)
+        self.loadImages(links) # Fonction ne marche qu'avec des liens, si nécessaire, rajouter une fonction pour les vecteurs latents
+        self.figures = []
         self.width = grid_width
         self.height = grid_height
         self.margin = margin
@@ -32,15 +36,29 @@ class DynamicGrid():
         self.isEmpty = True
         self.unique_selection = unique_selection
     
+    def figsToImage(self):
+        for fig in self.figures :
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+    
+    # Permet de modifier les figures qui sont utilisée
+    def setFigures(self, figures):
+        self.figures = figures
+    
+    def getFigures(self, figures):
+        return figures
+
     def setUniqueSelection(self, val):
         if isinstance(val, bool):
             raise TypeError
         else:
-            return val
+            self.unique_selection = val
     
     def getUniqueSelection(self):
         return self.unique_selection
-        self.unique_selection = val
+    
     def get_grid_dimensions(self,n):
         # Le nombre de lignes sera la partie entière de la racine carrée
         l = int(np.floor(np.sqrt(n)))
@@ -70,8 +88,13 @@ class DynamicGrid():
     def addImage(self, image):
         self.images.append(image)
 
-    def ToCTkImage(self, s):
-        self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.images))
+    def ToCTkImage(self, source, s):
+        if (source == "LINK"):
+            self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.images))
+        elif (source == "FIGURES"):
+            self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.figures))
+        else:
+            raise KeyError("source ne peut prendre que deux valeurs : LINK ou FIGURES")
     
     def getImages(self):
         return self.images
@@ -81,7 +104,15 @@ class DynamicGrid():
             raise IndexError
         return self.images[k]
 
-    def displayImages(self):
+    def algoGen(self):
+        # Fonction pour tout tester pour le moment.
+        # On récupère les images sélectionnées
+
+        pil_images = list(lambda x : x.cget())
+        # On les passes à l'algo génétique
+
+        # Le résultat est stocké dans une variable et on display les images.
+    def displayImages(self, source = "LINK"):
         # La frame doit être un objet CTkFrame
         # images est une liste d'images
         if (self.images == []):
@@ -100,8 +131,14 @@ class DynamicGrid():
         height_frame = self.height/self.columns
         
         images_size = max(width_frame/self.rows , height_frame/self.columns)
-        self.loadImages(self.links)
-        self.ToCTkImage(images_size)
+        if source == "LINK":
+            self.loadImages(self.links)
+            self.ToCTkImage(images_size, source)
+        elif source == "FIGURES":
+            self.ToCTkImage(images_size, source)
+        else:
+            #Si la grille se supprime sans rien afficher, alors le keyword est le pb
+            return
 
         for i in range(self.columns):
             currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="transparent")
