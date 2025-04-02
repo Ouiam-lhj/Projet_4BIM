@@ -18,9 +18,9 @@ class ImageDisplayError(Exception):
 
 class DynamicGrid():
     
-    def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01):
+    def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01, unique_selection = False):
         self.parentFrame = parentFrame
-        self.links = links
+        self.links = links # Modifier links par les vecteurs latents. Si liens, pas nécessaire de modifier
         self.loadImages(links)
         self.width = grid_width
         self.height = grid_height
@@ -30,7 +30,17 @@ class DynamicGrid():
         self.rows = 0
         self.columns = 0
         self.isEmpty = True
+        self.unique_selection = unique_selection
     
+    def setUniqueSelection(self, val):
+        if isinstance(val, bool):
+            raise TypeError
+        else:
+            return val
+    
+    def getUniqueSelection(self):
+        return self.unique_selection
+        self.unique_selection = val
     def get_grid_dimensions(self,n):
         # Le nombre de lignes sera la partie entière de la racine carrée
         l = int(np.floor(np.sqrt(n)))
@@ -325,8 +335,8 @@ class IHM():
 
         textMP = CTkLabel(midFrame,text="Sélection multiple : ")
         self.checkVarMP = customtkinter.StringVar(value="on")
-        checkboxSelecMP = customtkinter.CTkCheckBox(midFrame, text='',command=lambda : print(self.checkVarMP.get()),
-                                     variable=self.checkVarMP, onvalue="on", offvalue="off")
+        checkboxSelecMP = customtkinter.CTkCheckBox(midFrame, text='',command=lambda : self.grid.setUniqueSelection(self.checkVarMP),
+                                     variable=self.checkVarMP, onvalue=True, offvalue=False)
         
         textImage = CTkLabel(midFrame, text="Nombre d'images par générations : ")
         self.nbGenImages = customtkinter.IntVar(value=6)
