@@ -1,8 +1,6 @@
 from customtkinter import *
 import tkinter as tk
-import customtkinter
 from tkinter import messagebox
-from CTkListbox import *
 from PIL import Image, ImageTk
 import numpy as np
 from CTkSpinbox import * 
@@ -88,7 +86,7 @@ class DynamicGrid():
     def addImage(self, image):
         self.images.append(image)
 
-    def ToCTkImage(self, source, s):
+    def ToCTkImage(self, s, source):
         if (source == "LINK"):
             self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.images))
         elif (source == "FIGURES"):
@@ -231,10 +229,10 @@ class IHM():
         app.title("Questionnaire")
         app.geometry("520x600")
         app.configure(bg="#f5f5f5")
-        app.grab_set()
         app.grid_rowconfigure(0, weight=1)
         app.grid_columnconfigure(0, weight=1)
-
+        app.grab_set()
+        
         # Scrollable frame
         scroll = CTkScrollableFrame(app, width=500, height=600, fg_color="#ffffff")
         scroll.grid(row=0, column=0, columnspan=3, sticky="nsew")
@@ -253,43 +251,43 @@ class IHM():
         # Questions
         text_color = "#333333"
         font_size_questions = 16
-        text_sex = customtkinter.CTkLabel(scroll, text="Quel était le sexe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_bald = customtkinter.CTkLabel(scroll, text="L'individu était-il chauve ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_cheveux = customtkinter.CTkLabel(scroll, text="Quelle était la couleur des cheveux/de la barbe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_texture = customtkinter.CTkLabel(scroll, text="Quel était la texture de cheveux de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_corpu = customtkinter.CTkLabel(scroll, text="Quelle était la corpulence de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_lunettes = customtkinter.CTkLabel(scroll, text="L'individu portait-il des lunettes ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_age = customtkinter.CTkLabel(scroll, text="L'individu vous paraissait plutôt :", font=("Arial", font_size_questions), text_color=text_color)
-        text_pilosité = customtkinter.CTkLabel(scroll, text="L'individu portait-il une barbe, une moustache ou un bouc ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_sex = CTkLabel(scroll, text="Quel était le sexe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_bald = CTkLabel(scroll, text="L'individu était-il chauve ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_cheveux = CTkLabel(scroll, text="Quelle était la couleur des cheveux/de la barbe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_texture = CTkLabel(scroll, text="Quel était la texture de cheveux de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_corpu = CTkLabel(scroll, text="Quelle était la corpulence de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_lunettes = CTkLabel(scroll, text="L'individu portait-il des lunettes ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_age = CTkLabel(scroll, text="L'individu vous paraissait plutôt :", font=("Arial", font_size_questions), text_color=text_color)
+        text_pilosité = CTkLabel(scroll, text="L'individu portait-il une barbe, une moustache ou un bouc ?", font=("Arial", font_size_questions), text_color=text_color)
 
 
         # Réponses (Création et set)
-        self.combobox_sex = customtkinter.CTkComboBox(scroll, values=["Homme", "Femme", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_sex = CTkComboBox(scroll, values=["Homme", "Femme", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_sex.set("Sélectionner")
 
-        self.combobox_bald = customtkinter.CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_bald = CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_bald.set("Sélectionner")
 
-        self.combobox_cheveux = customtkinter.CTkComboBox(scroll, values=["Noirs", "Bruns/Châtains", "Blonds", "Gris", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_cheveux = CTkComboBox(scroll, values=["Noirs", "Bruns/Châtains", "Blonds", "Gris", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_cheveux.set("Sélectionner")
 
-        self.combobox_texture = customtkinter.CTkComboBox(scroll, values=["Lisses", "Bouclés", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_texture = CTkComboBox(scroll, values=["Lisses", "Bouclés", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_texture.set("Sélectionner")
 
-        self.combobox_corpu = customtkinter.CTkComboBox(scroll, values=["Faible", "Forte", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_corpu = CTkComboBox(scroll, values=["Faible", "Forte", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_corpu.set("Sélectionner")
 
-        self.combobox_lunettes = customtkinter.CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_lunettes = CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_lunettes.set("Sélectionner")
 
-        self.combobox_age = customtkinter.CTkComboBox(scroll, values=["Jeune", "Agé", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_age = CTkComboBox(scroll, values=["Jeune", "Agé", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_age.set("Sélectionner")
 
-        self.combobox_pilosité = customtkinter.CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_pilosité = CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_pilosité.set("Sélectionner")
 
         # Bouton de validation
-        button = customtkinter.CTkButton(scroll, text="Valider", font=("Arial", font_size_questions), width=200, height=30, command=lambda: self.close_window(app), fg_color="#528868", text_color="#ffffff")
+        button = CTkButton(scroll, text="Valider", font=("Arial", font_size_questions), width=200, height=30, command=lambda: self.close_window(app), fg_color="#528868", text_color="#ffffff")
 
         # Placement des widgets
         label_titre.grid(row=0, column=0, columnspan=3, pady=(20, 10))
@@ -414,12 +412,12 @@ class IHM():
         title = CTkLabel(topFrame, text="Paramètres", font=("Arial", 30), wraplength=480)
 
         textMP = CTkLabel(midFrame,text="Sélection multiple : ")
-        self.checkVarMP = customtkinter.StringVar(value="on")
-        checkboxSelecMP = customtkinter.CTkCheckBox(midFrame, text='',command=lambda : self.grid.setUniqueSelection(self.checkVarMP),
+        self.checkVarMP = StringVar(value="on")
+        checkboxSelecMP = CTkCheckBox(midFrame, text='',command=lambda : self.grid.setUniqueSelection(self.checkVarMP),
                                      variable=self.checkVarMP, onvalue=True, offvalue=False)
         
         textImage = CTkLabel(midFrame, text="Nombre d'images par générations : ")
-        self.nbGenImages = customtkinter.IntVar(value=6)
+        self.nbGenImages = IntVar(value=6)
         spinboxImages = CTkSpinbox(midFrame, variable = self.nbGenImages, min_value = 4, max_value= 9, width=60, height=15,border_width=0)
 
         validateButton = CTkButton(bottomFrame, text="Sauvegarder", command = lambda window=self.disp_window: print(self.disp_window.winfo_geometry()))
