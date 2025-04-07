@@ -5,7 +5,7 @@ from PIL import Image, ImageTk
 import numpy as np
 from CTkSpinbox import * 
 import io
-
+from code_gen_blend import *
 
 #pip install customtkinter
 #pip install CTkListbox
@@ -16,6 +16,11 @@ import io
 class ImageDisplayError(Exception):
     pass
 
+class SelectionError(Exception):
+    pass
+
+class MethodError(Exception):
+    pass
 class DynamicGrid():
     
     
@@ -33,6 +38,7 @@ class DynamicGrid():
         self.columns = 0
         self.isEmpty = True
         self.unique_selection = unique_selection
+        self.fusionMethod = "BLEND"
     
     def figsToImage(self):
         for fig in self.figures :
@@ -47,6 +53,12 @@ class DynamicGrid():
     
     def getFigures(self, figures):
         return figures
+    
+    def setFusionMethod(self, method):
+        self.fusionMethod = method
+
+    def getFusionMethod(self):
+        return self.fusionMethod
 
     def setUniqueSelection(self, val):
         if isinstance(val, bool):
@@ -105,9 +117,31 @@ class DynamicGrid():
     def algoGen(self):
         # Fonction pour tout tester pour le moment.
         # On récupère les images sélectionnées
-
-        pil_images = list(lambda x : x.cget())
+        if (len(self.selected_images) < 2):
+            raise SelectionError("Vous n'avez pas sélectionné assez d'images")
+        
+        pil_images = list(map(lambda x : x.cget("light_image"), self.selected_images))
+        
         # On les passes à l'algo génétique
+        if self.fusionMethod == "BLEND":
+            #On prend simplement les deux premières images
+            blended_face = blend_faces(pil_images[0], pil_images[1], alpha=0.45)
+            new_face = blended_face[0]
+            new_face_attr = blended_face[1]
+            new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+            
+            print(type(new_face_floue))
+
+        # On a obtenue les (ou la dans le cadre du premier test)
+        elif (self.fusionMethod == "VAE"):
+            print("Il me faut les mutations pour réaliser la fusions des codes")
+        else:
+            raise MethodError("Un mot clef incorrect a été utilisé pour le passage de génération")
+        
+        self.images = [new_face_floue for i in range(6)]
+        self.destroyGrid()
+        self.displayImages(source="FIGURES")
+
 
         # Le résultat est stocké dans une variable et on display les images.
     def displayImages(self, source = "LINK"):
@@ -131,9 +165,9 @@ class DynamicGrid():
         images_size = max(width_frame/self.rows , height_frame/self.columns)
         if source == "LINK":
             self.loadImages(self.links)
-            self.ToCTkImage(images_size, source)
+            self.ToCTkImage(images_size,source)
         elif source == "FIGURES":
-            self.ToCTkImage(images_size, source)
+            self.ToCTkImage(images_size,source)
         else:
             #Si la grille se supprime sans rien afficher, alors le keyword est le pb
             return
@@ -201,7 +235,7 @@ class IHM():
         self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
-        self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.get_selected_images(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
+        self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
         self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération précédente", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
         self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération Suivante", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
         
@@ -232,7 +266,7 @@ class IHM():
         app.grid_rowconfigure(0, weight=1)
         app.grid_columnconfigure(0, weight=1)
         app.grab_set()
-        
+
         # Scrollable frame
         scroll = CTkScrollableFrame(app, width=500, height=600, fg_color="#ffffff")
         scroll.grid(row=0, column=0, columnspan=3, sticky="nsew")
@@ -376,6 +410,11 @@ class IHM():
         textImage = CTkLabel(midFrame, text="Nombre d'images par générations : ")
         self.nbGenImages = IntVar(value=6)
         spinboxImages = CTkSpinbox(midFrame, variable = self.nbGenImages, min_value = 4, max_value= 9, width=60, height=15,border_width=0)
+
+        textFus = CTkLabel(midFrame,text="Méthode de fusion : ")
+        self.checkVarFus = StringVar(value="BLEND")
+        comboFus = CTkCheckBox(midFrame, text='', values = ['BLEND', 'VAE'], command=lambda : self.grid.setFusionMethod(self.checkVarFus),
+                                     variable=self.checkVarFus)
 
         validateButton = CTkButton(bottomFrame, text="Sauvegarder", command = lambda window=self.disp_window: print(self.disp_window.winfo_geometry()))
 
