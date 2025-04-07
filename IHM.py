@@ -287,21 +287,14 @@ class IHM():
         text_color = "#333333"
         font_size_questions = 16
         text_sex = CTkLabel(scroll, text="Quel était le sexe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_bald = CTkLabel(scroll, text="L'individu était-il chauve ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_cheveux = CTkLabel(scroll, text="Quelle était la couleur des cheveux/de la barbe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_cheveux = CTkLabel(scroll, text="Quelle était la couleur des cheveux de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
         text_texture = CTkLabel(scroll, text="Quel était la texture de cheveux de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_corpu = CTkLabel(scroll, text="Quelle était la corpulence de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_lunettes = CTkLabel(scroll, text="L'individu portait-il des lunettes ?", font=("Arial", font_size_questions), text_color=text_color)
         text_age = CTkLabel(scroll, text="L'individu vous paraissait plutôt :", font=("Arial", font_size_questions), text_color=text_color)
-        text_pilosité = CTkLabel(scroll, text="L'individu portait-il une barbe, une moustache ou un bouc ?", font=("Arial", font_size_questions), text_color=text_color)
 
 
         # Réponses (Création et set)
         self.combobox_sex = CTkComboBox(scroll, values=["Homme", "Femme", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_sex.set("Sélectionner")
-
-        self.combobox_bald = CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
-        self.combobox_bald.set("Sélectionner")
 
         self.combobox_cheveux = CTkComboBox(scroll, values=["Noirs", "Bruns/Châtains", "Blonds", "Gris", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_cheveux.set("Sélectionner")
@@ -309,17 +302,9 @@ class IHM():
         self.combobox_texture = CTkComboBox(scroll, values=["Lisses", "Bouclés", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_texture.set("Sélectionner")
 
-        self.combobox_corpu = CTkComboBox(scroll, values=["Faible", "Forte", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
-        self.combobox_corpu.set("Sélectionner")
-
-        self.combobox_lunettes = CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
-        self.combobox_lunettes.set("Sélectionner")
-
         self.combobox_age = CTkComboBox(scroll, values=["Jeune", "Agé", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_age.set("Sélectionner")
 
-        self.combobox_pilosité = CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
-        self.combobox_pilosité.set("Sélectionner")
 
         # Bouton de validation
         button = CTkButton(scroll, text="Valider", font=("Arial", font_size_questions), width=200, height=30, command=lambda: self.close_window(app), fg_color="#528868", text_color="#ffffff")
@@ -332,26 +317,14 @@ class IHM():
         text_sex.grid(row=3, column=0, padx=20, pady=(20, 2))
         self.combobox_sex.grid(row=4, column=0, padx=20, pady=(2, 20))
 
-        text_bald.grid(row=5, column=0, padx=20, pady=(20, 2))
-        self.combobox_bald.grid(row=6, column=0, padx=20, pady=(2, 20))
-
         text_cheveux.grid(row=7, column=0, padx=20, pady=(20, 2))
         self.combobox_cheveux.grid(row=8, column=0, padx=20, pady=(2, 20))
 
         text_texture.grid(row=9, column=0, padx=20, pady=(20, 2))
         self.combobox_texture.grid(row=10, column=0, padx=20, pady=(2, 20))
 
-        text_corpu.grid(row=11, column=0, padx=20, pady=(20, 2))
-        self.combobox_corpu.grid(row=12, column=0, padx=20, pady=(2, 20))
-
-        text_lunettes.grid(row=13, column=0, padx=20, pady=(20, 2))
-        self.combobox_lunettes.grid(row=14, column=0, padx=20, pady=(2, 20))
-
         text_age.grid(row=15, column=0, padx=20, pady=(20, 2))
         self.combobox_age.grid(row=16, column=0, padx=20, pady=(2, 20))
-
-        text_pilosité.grid(row=17, column=0, padx=20, pady=(20, 2))
-        self.combobox_pilosité.grid(row=18, column=0, padx=20, pady=(2, 20))
 
         button.grid(row=19, column=0, pady=(50, 20))
 
@@ -359,19 +332,13 @@ class IHM():
         # Récupération des réponses
         reponses = {
             "Male": self.combobox_sex.get(),
-            "Bald": self.combobox_bald.get(),
             "Brown_Hair": self.combobox_cheveux.get(),
             "Gray_Hair": self.combobox_cheveux.get(),
             "Black_Hair": self.combobox_cheveux.get(),
             "Blond_Hair": self.combobox_cheveux.get(),
             "Wavy_Hair": self.combobox_texture.get(),
             "Straight_Hair": self.combobox_texture.get(),
-            "Chubby": self.combobox_corpu.get(),
-            "Eyeglasses": self.combobox_lunettes.get(),
             "Young": self.combobox_age.get(),
-            "Mustache": self.combobox_pilosité.get(),
-            "Goatee": self.combobox_pilosité.get(),
-            "No_Beard": self.combobox_pilosité.get()
         }
         if "Sélectionner" in reponses.values():
             messagebox.showerror("", "Veuillez répondre à toutes les questions.")
@@ -386,33 +353,23 @@ class IHM():
     def conversion_reponses(self, reponses):
         conversions = {
         "Male": {"Homme": 1, "Femme": -1, "Je ne sais pas": 0},
-        "Bald": {"Oui": 1, "Non": -1, "Je ne sais pas": 0},
         "Brown_Hair": {"Noirs": -1, "Bruns/Châtains": 1, "Blonds": -1, "Gris": -1, "Je ne sais pas": 0},
         "Gray_Hair": {"Noirs": -1, "Bruns/Châtains": -1, "Blonds": -1, "Gris": 1, "Je ne sais pas": 0},
         "Black_Hair": {"Noirs": 1, "Bruns/Châtains": -1, "Blonds": -1, "Gris": -1, "Je ne sais pas": 0},
         "Blond_Hair": {"Noirs": -1, "Bruns/Châtains": -1, "Blonds": 1, "Gris": -1, "Je ne sais pas": 0},
-        "Bald": {"Noirs": -1, "Bruns/Châtains": -1, "Blonds": -1, "Gris": -1, "Je ne sais pas": 0},
         "Wavy_Hair": {"Lisses": -1, "Bouclés": 1, "Je ne sais pas": 0},
         "Straight_Hair": {"Lisses": 1, "Bouclés": -1, "Je ne sais pas": 0},
-        "Chubby": {"Faible": -1, "Forte": 1, "Je ne sais pas": 0},
-        "Eyeglasses": {"Oui": 1, "Non": -1, "Je ne sais pas": 0},
         "Young": {"Jeune": 1, "Agé": -1, "Je ne sais pas": 0},
-        "Mustache": {"Oui": 0, "Non": -1, "Je ne sais pas": 0},
-        "Goatee": {"Oui": 0, "Non": -1, "Je ne sais pas": 0},
-        "No_Beard": {"Oui": -1, "Non": 1, "Je ne sais pas": 0},
         }
         
-        # Conversion des réponses
-        reponses_converted = {
-            key: conversions[key].get(value, value)
-            for key, value in reponses.items()
-        }
+        # Conversion des réponses en valeurs numériques
+        for key in reponses:
+            if key in conversions and reponses[key] in conversions[key]:
+                reponses[key] = conversions[key][reponses[key]]
+            else:
+                reponses[key] = 0 
 
-        if reponses_converted.get("Bald") == 1:
-            reponses_converted["Straight_Hair"] = -1
-            reponses_converted["Wavy_Hair"] = -1
-
-        return reponses_converted
+        return reponses
 
     def displayGrid(self):
         self.grid.setHeight(self.photosFrame.winfo_height())
