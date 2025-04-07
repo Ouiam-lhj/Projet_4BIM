@@ -179,6 +179,7 @@ class IHM():
     def __init__(self):
         self.root = CTk()
         self.homePage()
+        set_appearance_mode("light")
         self.root.mainloop()
 
     def homePage(self):
@@ -189,13 +190,13 @@ class IHM():
         self.principalMainframe = CTkFrame(self.root, fg_color="#38393b", border_width = 0)
         self.menuMainframe = CTkFrame(self.root, width= 200)
         self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#00FF00", height = 70)
-        self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#0000FF", height = 400)
+        self.photosFrame = CTkFrame(self.principalMainframe, height = 500)
 
         self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#FF0000", height = 50)
         self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFC0CB", height = 50)
         self.middleSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFFF00", height = 50)
         self.rightSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FF4500", height = 50)
-
+        self.consignes_label = CTkLabel(self.photosFrame, text="Bienvenue\nVeuillez remplir le formulaire pour commencer", font=("Arial", 30), text_color="#38393b")
 
         self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.menuExportButton = CTkButton(self.menuMainframe, text="Exporter", command=self.displayExportWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
@@ -217,6 +218,7 @@ class IHM():
         self.previousGenButton.pack(side="left")
         self.newGenButton.pack(side="left")
         self.nextGenButton.pack(side="left")
+        self.consignes_label.pack(expand=True, side="top", pady=50)
 
         self.menuFormButton.pack(fill="x", pady=10)
         self.menuExportButton.pack(fill="x", pady=10)
@@ -230,6 +232,8 @@ class IHM():
         app.geometry("520x600")
         app.configure(bg="#f5f5f5")
         app.grab_set()
+        app.grid_rowconfigure(0, weight=1)
+        app.grid_columnconfigure(0, weight=1)
 
         # Scrollable frame
         scroll = CTkScrollableFrame(app, width=500, height=600, fg_color="#ffffff")
@@ -250,23 +254,23 @@ class IHM():
         text_color = "#333333"
         font_size_questions = 16
         text_sex = customtkinter.CTkLabel(scroll, text="Quel était le sexe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_peau = customtkinter.CTkLabel(scroll, text="Quelle était la couleur de peau de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
-        text_cheveux = customtkinter.CTkLabel(scroll, text="Quelle était la couleur des cheveux de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_bald = customtkinter.CTkLabel(scroll, text="L'individu était-il chauve ?", font=("Arial", font_size_questions), text_color=text_color)
+        text_cheveux = customtkinter.CTkLabel(scroll, text="Quelle était la couleur des cheveux/de la barbe de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
         text_texture = customtkinter.CTkLabel(scroll, text="Quel était la texture de cheveux de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
         text_corpu = customtkinter.CTkLabel(scroll, text="Quelle était la corpulence de l'individu ?", font=("Arial", font_size_questions), text_color=text_color)
         text_lunettes = customtkinter.CTkLabel(scroll, text="L'individu portait-il des lunettes ?", font=("Arial", font_size_questions), text_color=text_color)
         text_age = customtkinter.CTkLabel(scroll, text="L'individu vous paraissait plutôt :", font=("Arial", font_size_questions), text_color=text_color)
-        text_pilosité = customtkinter.CTkLabel(scroll, text="Quelle était la pilosité de l'individu", font=("Arial", font_size_questions), text_color=text_color)
+        text_pilosité = customtkinter.CTkLabel(scroll, text="L'individu portait-il une barbe, une moustache ou un bouc ?", font=("Arial", font_size_questions), text_color=text_color)
 
 
         # Réponses (Création et set)
         self.combobox_sex = customtkinter.CTkComboBox(scroll, values=["Homme", "Femme", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_sex.set("Sélectionner")
 
-        self.combobox_peau = customtkinter.CTkComboBox(scroll, values=["Pâle", "Foncée", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
-        self.combobox_peau.set("Sélectionner")
+        self.combobox_bald = customtkinter.CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_bald.set("Sélectionner")
 
-        self.combobox_cheveux = customtkinter.CTkComboBox(scroll, values=["Noirs/Bruns/Châtains", "Blonds", "Roux", "Chauve", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_cheveux = customtkinter.CTkComboBox(scroll, values=["Noirs", "Bruns/Châtains", "Blonds", "Gris", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_cheveux.set("Sélectionner")
 
         self.combobox_texture = customtkinter.CTkComboBox(scroll, values=["Lisses", "Bouclés", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
@@ -281,7 +285,7 @@ class IHM():
         self.combobox_age = customtkinter.CTkComboBox(scroll, values=["Jeune", "Agé", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_age.set("Sélectionner")
 
-        self.combobox_pilosité = customtkinter.CTkComboBox(scroll, values=["Absente", "Bouc", "Moustache", "Bouc et moustache", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
+        self.combobox_pilosité = customtkinter.CTkComboBox(scroll, values=["Oui", "Non", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_pilosité.set("Sélectionner")
 
         # Bouton de validation
@@ -295,8 +299,8 @@ class IHM():
         text_sex.grid(row=3, column=0, padx=20, pady=(20, 2))
         self.combobox_sex.grid(row=4, column=0, padx=20, pady=(2, 20))
 
-        text_peau.grid(row=5, column=0, padx=20, pady=(20, 2))
-        self.combobox_peau.grid(row=6, column=0, padx=20, pady=(2, 20))
+        text_bald.grid(row=5, column=0, padx=20, pady=(20, 2))
+        self.combobox_bald.grid(row=6, column=0, padx=20, pady=(2, 20))
 
         text_cheveux.grid(row=7, column=0, padx=20, pady=(20, 2))
         self.combobox_cheveux.grid(row=8, column=0, padx=20, pady=(2, 20))
@@ -321,22 +325,61 @@ class IHM():
     def close_window(self, app):
         # Récupération des réponses
         reponses = {
-            "Sexe": self.combobox_sex.get(),
-            "Couleur de peau": self.combobox_peau.get(),
-            "Couleur des cheveux": self.combobox_cheveux.get(),
-            "Texture des cheveux": self.combobox_texture.get(),
-            "Corpulence": self.combobox_corpu.get(),
-            "Lunettes": self.combobox_lunettes.get(),
-            "Âge": self.combobox_age.get(),
-            "Pilosité": self.combobox_pilosité.get()
+            "Male": self.combobox_sex.get(),
+            "Bald": self.combobox_bald.get(),
+            "Brown_Hair": self.combobox_cheveux.get(),
+            "Gray_Hair": self.combobox_cheveux.get(),
+            "Black_Hair": self.combobox_cheveux.get(),
+            "Blond_Hair": self.combobox_cheveux.get(),
+            "Wavy_Hair": self.combobox_texture.get(),
+            "Straight_Hair": self.combobox_texture.get(),
+            "Chubby": self.combobox_corpu.get(),
+            "Eyeglasses": self.combobox_lunettes.get(),
+            "Young": self.combobox_age.get(),
+            "Mustache": self.combobox_pilosité.get(),
+            "Goatee": self.combobox_pilosité.get(),
+            "No_Beard": self.combobox_pilosité.get()
         }
         if "Sélectionner" in reponses.values():
             messagebox.showerror("", "Veuillez répondre à toutes les questions.")
         else:
+            converted_reponses = self.conversion_reponses(reponses)
             messagebox.showinfo("", "Vos réponses ont bien été enregistrées.")
             app.destroy()
+        print(converted_reponses)
             
-        return reponses
+        return converted_reponses
+
+    def conversion_reponses(self, reponses):
+        conversions = {
+        "Male": {"Homme": 1, "Femme": -1, "Je ne sais pas": 0},
+        "Bald": {"Oui": 1, "Non": -1, "Je ne sais pas": 0},
+        "Brown_Hair": {"Noirs": -1, "Bruns/Châtains": 1, "Blonds": -1, "Gris": -1, "Je ne sais pas": 0},
+        "Gray_Hair": {"Noirs": -1, "Bruns/Châtains": -1, "Blonds": -1, "Gris": 1, "Je ne sais pas": 0},
+        "Black_Hair": {"Noirs": 1, "Bruns/Châtains": -1, "Blonds": -1, "Gris": -1, "Je ne sais pas": 0},
+        "Blond_Hair": {"Noirs": -1, "Bruns/Châtains": -1, "Blonds": 1, "Gris": -1, "Je ne sais pas": 0},
+        "Bald": {"Noirs": -1, "Bruns/Châtains": -1, "Blonds": -1, "Gris": -1, "Je ne sais pas": 0},
+        "Wavy_Hair": {"Lisses": -1, "Bouclés": 1, "Je ne sais pas": 0},
+        "Straight_Hair": {"Lisses": 1, "Bouclés": -1, "Je ne sais pas": 0},
+        "Chubby": {"Faible": -1, "Forte": 1, "Je ne sais pas": 0},
+        "Eyeglasses": {"Oui": 1, "Non": -1, "Je ne sais pas": 0},
+        "Young": {"Jeune": 1, "Agé": -1, "Je ne sais pas": 0},
+        "Mustache": {"Oui": 0, "Non": -1, "Je ne sais pas": 0},
+        "Goatee": {"Oui": 0, "Non": -1, "Je ne sais pas": 0},
+        "No_Beard": {"Oui": -1, "Non": 1, "Je ne sais pas": 0},
+        }
+        
+        # Conversion des réponses
+        reponses_converted = {
+            key: conversions[key].get(value, value)
+            for key, value in reponses.items()
+        }
+
+        if reponses_converted.get("Bald") == 1:
+            reponses_converted["Straight_Hair"] = -1
+            reponses_converted["Wavy_Hair"] = -1
+
+        return reponses_converted
 
     def displayGrid(self):
         self.grid.setHeight(self.photosFrame.winfo_height())
