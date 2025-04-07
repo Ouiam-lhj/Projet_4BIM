@@ -15,52 +15,6 @@ import cv2
 #!pip install dlib
 import dlib
 
-list_attr=pd.read_csv("list_attr_celeba.txt" , sep=r"\s+", header = 0)
-pos_attr=pd.read_csv("list_landmarks_align_celeba.txt" , sep=r"\s+", header = 0)
-
-
-#image_1 = Image.open("img_align_celeba/000001.jpg")
-#image_2 = Image.open("img_align_celeba/000002.jpg")
-#image_3 = Image.open("img_align_celeba/000003.jpg")
-#image_4 = Image.open("img_align_celeba/000004.jpg")
-#image_5 = Image.open("img_align_celeba/000005.jpg")
-
-#PR RUN SUR ORDI OUIAM
-#PR RUN SUR ORDI OUIAM
-image_1 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000001.jpg")
-image_2 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000002.jpg")
-image_3 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000003.jpg")
-image_4 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000004.jpg")
-image_5 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000005.jpg")
-image_10 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000010.jpg")
-
-
-
-list_image = [image_1, image_2, image_3, image_4, image_5]
-
-points_1 = np.array(pos_attr.iloc[0].to_frame().T).reshape(5, 2)
-points_2 = np.array(pos_attr.iloc[1].to_frame().T).reshape(5, 2)
-points_3 = np.array(pos_attr.iloc[2].to_frame().T).reshape(5, 2)
-points_4 = np.array(pos_attr.iloc[3].to_frame().T).reshape(5, 2)
-# Séparer les coordonnées X et Y
-x1, y1 = points_1[:, 0], points_1[:, 1]
-x2, y2 = points_2[:, 0], points_2[:, 1]
-x3, y3 = points_3[:, 0], points_3[:, 1]
-x4, y4 = points_4[:, 0], points_4[:, 1]
-
-
-#plt.imshow(image_1)
-#plt.scatter(x1, y2, c='red', marker='o', s=6)  # Points en rouge
-#plt.imshow(image_2)
-#plt.scatter(x2, y2, c='red', marker='o', s=6)  # Points en rouge
-plt.imshow(image_3)
-plt.scatter(x3, y3, c='red', marker='o', s=6)  # Points en rouge
-#plt.imshow(image_4)
-#plt.scatter(x4, y4, c='red', marker='o', s=6)  # Points en rouge
-plt.axis("on")  # Garde les axes activés (ou plt.axis("off") pour masquer)
-
-# Afficher le tout
-
 def align_face(img, landmarks_init, landmarks_fin, size=(256, 256)):
     """Aligne un visage en utilisant une transformation homographique basée sur les 68 landmarks."""
     if isinstance(img, Image.Image):
@@ -101,7 +55,7 @@ def blend_faces(face1, face2, alpha=0.5):
     blended_face_pil = Image.fromarray(blended_face)
 
     return blended_face_pil, avg_pos_attr, blended_face
-print(blend_faces(image_1, image_2, alpha=0.45))
+
 
 
 
@@ -112,7 +66,7 @@ def draw_landmarks(image):
     for (x, y) in landmarks:
         cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
     return image
-print(get_landmarks(image_1))
+
 
 
 def apply_blur_around_face(image, landmarks, blur_strength):
@@ -134,24 +88,70 @@ def apply_blur_around_face(image, landmarks, blur_strength):
 
 
 
-
-#####################################
-
-#RUN RUN
-
-#####################################
+if __name__ == "__main__":
+    list_attr=pd.read_csv("list_attr_celeba.txt" , sep=r"\s+", header = 0)
+    pos_attr=pd.read_csv("list_landmarks_align_celeba.txt" , sep=r"\s+", header = 0)
 
 
-face1 = Image.open("000004.jpg")
-face2 = Image.open("000001.jpg")
-#print(face1)
+    #image_1 = Image.open("img_align_celeba/000001.jpg")
+    #image_2 = Image.open("img_align_celeba/000002.jpg")
+    #image_3 = Image.open("img_align_celeba/000003.jpg")
+    #image_4 = Image.open("img_align_celeba/000004.jpg")
+    #image_5 = Image.open("img_align_celeba/000005.jpg")
 
-blended_face = blend_faces(image_1, image_2, alpha=0.45)
-#print(blended_face)
-new_face = blended_face[0]
-new_face_attr = blended_face[1]
-new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+    #PR RUN SUR ORDI OUIAM
+    #PR RUN SUR ORDI OUIAM
+    image_1 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000001.jpg")
+    image_2 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000002.jpg")
+    image_3 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000003.jpg")
+    image_4 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000004.jpg")
+    image_5 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000005.jpg")
+    image_10 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000010.jpg")
 
-plt.imshow(new_face_floue)
-plt.axis('off')
-plt.show()
+
+
+    list_image = [image_1, image_2, image_3, image_4, image_5]
+
+    points_1 = np.array(pos_attr.iloc[0].to_frame().T).reshape(5, 2)
+    points_2 = np.array(pos_attr.iloc[1].to_frame().T).reshape(5, 2)
+    points_3 = np.array(pos_attr.iloc[2].to_frame().T).reshape(5, 2)
+    points_4 = np.array(pos_attr.iloc[3].to_frame().T).reshape(5, 2)
+    # Séparer les coordonnées X et Y
+    x1, y1 = points_1[:, 0], points_1[:, 1]
+    x2, y2 = points_2[:, 0], points_2[:, 1]
+    x3, y3 = points_3[:, 0], points_3[:, 1]
+    x4, y4 = points_4[:, 0], points_4[:, 1]
+    print(get_landmarks(image_1))
+    print(blend_faces(image_1, image_2, alpha=0.45))
+    #plt.imshow(image_1)
+    #plt.scatter(x1, y2, c='red', marker='o', s=6)  # Points en rouge
+    #plt.imshow(image_2)
+    #plt.scatter(x2, y2, c='red', marker='o', s=6)  # Points en rouge
+    plt.imshow(image_3)
+    plt.scatter(x3, y3, c='red', marker='o', s=6)  # Points en rouge
+    #plt.imshow(image_4)
+    #plt.scatter(x4, y4, c='red', marker='o', s=6)  # Points en rouge
+    plt.axis("on")  # Garde les axes activés (ou plt.axis("off") pour masquer)
+
+    # Afficher le tout
+
+    #####################################
+
+    #RUN RUN
+
+    #####################################
+
+
+    face1 = Image.open("000004.jpg")
+    face2 = Image.open("000001.jpg")
+    #print(face1)
+
+    blended_face = blend_faces(image_1, image_2, alpha=0.45)
+    #print(blended_face)
+    new_face = blended_face[0]
+    new_face_attr = blended_face[1]
+    new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+
+    plt.imshow(new_face_floue)
+    plt.axis('off')
+    plt.show()
