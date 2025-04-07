@@ -5,20 +5,27 @@ from tkinter import messagebox
 from CTkListbox import *
 from PIL import Image, ImageTk
 import numpy as np
+from CTkSpinbox import * 
+import io
+
 
 #pip install customtkinter
 #pip install CTkListbox
 #pip install tkinter
 #pip install PIL
+#pip install CTkSpinbox
+
 class ImageDisplayError(Exception):
     pass
 
 class DynamicGrid():
     
-    def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01):
+    
+    def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01, unique_selection = False):
         self.parentFrame = parentFrame
-        self.links = links
-        self.loadImages(links)
+        self.links = links # Modifier links par les vecteurs latents. Si liens, pas nécessaire de modifier
+        self.loadImages(links) # Fonction ne marche qu'avec des liens, si nécessaire, rajouter une fonction pour les vecteurs latents
+        self.figures = []
         self.width = grid_width
         self.height = grid_height
         self.margin = margin
@@ -27,6 +34,30 @@ class DynamicGrid():
         self.rows = 0
         self.columns = 0
         self.isEmpty = True
+        self.unique_selection = unique_selection
+    
+    def figsToImage(self):
+        for fig in self.figures :
+            buf = io.BytesIO()
+            fig.savefig(buf)
+            buf.seek(0)
+            img = Image.open(buf)
+    
+    # Permet de modifier les figures qui sont utilisée
+    def setFigures(self, figures):
+        self.figures = figures
+    
+    def getFigures(self, figures):
+        return figures
+
+    def setUniqueSelection(self, val):
+        if isinstance(val, bool):
+            raise TypeError
+        else:
+            self.unique_selection = val
+    
+    def getUniqueSelection(self):
+        return self.unique_selection
     
     def get_grid_dimensions(self,n):
         # Le nombre de lignes sera la partie entière de la racine carrée
@@ -57,8 +88,13 @@ class DynamicGrid():
     def addImage(self, image):
         self.images.append(image)
 
-    def ToCTkImage(self, s):
-        self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.images))
+    def ToCTkImage(self, source, s):
+        if (source == "LINK"):
+            self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.images))
+        elif (source == "FIGURES"):
+            self.images = list(map(lambda x : CTkImage(light_image=x, dark_image=x, size = (s,s)),self.figures))
+        else:
+            raise KeyError("source ne peut prendre que deux valeurs : LINK ou FIGURES")
     
     def getImages(self):
         return self.images
@@ -68,7 +104,15 @@ class DynamicGrid():
             raise IndexError
         return self.images[k]
 
-    def displayImages(self):
+    def algoGen(self):
+        # Fonction pour tout tester pour le moment.
+        # On récupère les images sélectionnées
+
+        pil_images = list(lambda x : x.cget())
+        # On les passes à l'algo génétique
+
+        # Le résultat est stocké dans une variable et on display les images.
+    def displayImages(self, source = "LINK"):
         # La frame doit être un objet CTkFrame
         # images est une liste d'images
         if (self.images == []):
@@ -87,8 +131,14 @@ class DynamicGrid():
         height_frame = self.height/self.columns
         
         images_size = max(width_frame/self.rows , height_frame/self.columns)
-        self.loadImages(self.links)
-        self.ToCTkImage(images_size)
+        if source == "LINK":
+            self.loadImages(self.links)
+            self.ToCTkImage(images_size, source)
+        elif source == "FIGURES":
+            self.ToCTkImage(images_size, source)
+        else:
+            #Si la grille se supprime sans rien afficher, alors le keyword est le pb
+            return
 
         for i in range(self.columns):
             currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="transparent")
@@ -149,6 +199,8 @@ class IHM():
         self.consignes_label = CTkLabel(self.photosFrame, text="Bienvenue\nVeuillez remplir le formulaire pour commencer", font=("Arial", 30), text_color="#38393b")
 
         self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.menuExportButton = CTkButton(self.menuMainframe, text="Exporter", command=self.displayExportWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
         self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
         self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.get_selected_images(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
@@ -169,6 +221,8 @@ class IHM():
         self.consignes_label.pack(expand=True, side="top", pady=50)
 
         self.menuFormButton.pack(fill="x", pady=10)
+        self.menuExportButton.pack(fill="x", pady=10)
+        self.menuParamButton.pack(fill="x", pady=10)
         self.photo.pack(fill="x", pady=15)
 
 
@@ -338,6 +392,60 @@ class IHM():
     
     def previousGen(self):
         print("Pas implémenté")
+    
+    def displayExportWindow(self):
+        exp_window = CTkToplevel(self.root)
+        exp_window.title("Exporter")
+        exp_window.geometry("450x300")
+        exp_window.grab_set()
+
+    def displayParameterWindow(self):
+        # Fenêtre qui correspond aux différents paramètres de l'applications.
+        change = True
+        self.disp_window = CTkToplevel(self.root)
+        self.disp_window.title("Paramètres")
+        self.disp_window.geometry("300x150")
+        self.disp_window.grab_set()
+
+        topFrame = CTkFrame(self.disp_window)
+        midFrame = CTkFrame(self.disp_window)
+        bottomFrame = CTkFrame(self.disp_window)
+
+        title = CTkLabel(topFrame, text="Paramètres", font=("Arial", 30), wraplength=480)
+
+        textMP = CTkLabel(midFrame,text="Sélection multiple : ")
+        self.checkVarMP = customtkinter.StringVar(value="on")
+        checkboxSelecMP = customtkinter.CTkCheckBox(midFrame, text='',command=lambda : self.grid.setUniqueSelection(self.checkVarMP),
+                                     variable=self.checkVarMP, onvalue=True, offvalue=False)
+        
+        textImage = CTkLabel(midFrame, text="Nombre d'images par générations : ")
+        self.nbGenImages = customtkinter.IntVar(value=6)
+        spinboxImages = CTkSpinbox(midFrame, variable = self.nbGenImages, min_value = 4, max_value= 9, width=60, height=15,border_width=0)
+
+        validateButton = CTkButton(bottomFrame, text="Sauvegarder", command = lambda window=self.disp_window: print(self.disp_window.winfo_geometry()))
+
+        self.disp_window.grid_columnconfigure((0,1,2), weight=1) 
+        topFrame.grid_columnconfigure(0, weight=1)
+        midFrame.grid_columnconfigure((0,1,2), weight=1)
+        bottomFrame.grid_columnconfigure(0, weight=1)
+        topFrame.grid(row = 0, sticky="nsew")
+        midFrame.grid(row = 1, sticky="nsew")
+        bottomFrame.grid(row = 2, sticky="nsew")
+
+        title.grid(column = 0, row = 0, sticky="nsew")
+        textMP.grid(column = 0, row = 0, sticky="nsew")
+        checkboxSelecMP.grid(column = 1, row = 0, sticky="nsew")
+        textImage.grid(column = 0, row=1, sticky="nsew")
+        spinboxImages.grid(column = 1, row = 1, sticky="nsew")
+        validateButton.grid(column= 0, padx = 20, pady=10)
+        self.disp_window.protocol("WM_DELETE_WINDOW", lambda val=change : self.destroyParam(change))
+    
+    def destroyParam(self, changed):
+        if changed:
+            messagebox.askquestion("" , "Souhaitez-vous continuer sans enregistrer ?")
+        self.disp_window.destroy()
+        
+
 
 
 if __name__ == "__main__":
