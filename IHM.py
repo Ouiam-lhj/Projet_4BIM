@@ -138,7 +138,7 @@ class DynamicGrid():
         else:
             raise MethodError("Un mot clef incorrect a été utilisé pour le passage de génération")
         
-        self.images = [new_face_floue for i in range(6)]
+        self.figures = list(map(lambda x : Image.fromarray(x), [new_face_floue for i in range(6)]))
         self.destroyGrid()
         self.displayImages(source="FIGURES")
 
@@ -172,6 +172,7 @@ class DynamicGrid():
             #Si la grille se supprime sans rien afficher, alors le keyword est le pb
             return
 
+        print(self.images)
         for i in range(self.columns):
             currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="transparent")
             currentFrame.pack(expand=True, fill="both", side="left")
