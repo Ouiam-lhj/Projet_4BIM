@@ -10,7 +10,7 @@ from code_gen_blend import *
 #pip install customtkinter
 #pip install CTkListbox
 #pip install tkinter
-#pip install PIL
+#pip install Pillow
 #pip install CTkSpinbox
 
 class ImageDisplayError(Exception):
@@ -266,13 +266,13 @@ class IHM():
         app.configure(bg="#f5f5f5")
         app.grid_rowconfigure(0, weight=1)
         app.grid_columnconfigure(0, weight=1)
-        app.grab_set()
 
         # Scrollable frame
         scroll = CTkScrollableFrame(app, width=500, height=600, fg_color="#ffffff")
         scroll.grid(row=0, column=0, columnspan=3, sticky="nsew")
         scroll.grid_rowconfigure(0, weight=1)
         scroll.grid_columnconfigure(0, weight=1)
+        app.grab_set()
         
         # Définition des variables
         titre = "Questionnaire de pré-sélection"
