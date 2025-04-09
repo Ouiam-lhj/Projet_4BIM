@@ -220,10 +220,10 @@ class IHM():
 
         self.root.title("Le profiler des zencoders")
 
-        self.principalMainframe = CTkFrame(self.root, fg_color="#38393b", border_width = 0)
+        self.principalMainframe = CTkFrame(self.root, fg_color="#ffffff", border_width = 0)
         self.menuMainframe = CTkFrame(self.root, width= 200)
-        self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#00FF00", height = 70)
-        self.photosFrame = CTkFrame(self.principalMainframe, height = 500)
+        self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff", height = 70)
+        self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff")
 
         self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#FF0000", height = 50)
         self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFC0CB", height = 50)
@@ -251,7 +251,7 @@ class IHM():
         self.previousGenButton.pack(side="left")
         self.newGenButton.pack(side="left")
         self.nextGenButton.pack(side="left")
-        self.consignes_label.pack(expand=True, side="top", pady=50)
+        self.consignes_label.pack(expand=True, fill="both", side="top", pady=200)
 
         self.menuFormButton.pack(fill="x", pady=10)
         self.menuExportButton.pack(fill="x", pady=10)
@@ -372,6 +372,8 @@ class IHM():
         return reponses
 
     def displayGrid(self):
+        if self.consignes_label.winfo_exists():
+            self.consignes_label.pack_forget()
         self.grid.setHeight(self.photosFrame.winfo_height())
         self.grid.setWidth(self.photosFrame.winfo_width())
 
