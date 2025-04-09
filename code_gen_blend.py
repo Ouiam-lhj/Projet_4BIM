@@ -89,6 +89,7 @@ def apply_blur_around_face(image, landmarks, blur_strength):
 
 
 if __name__ == "__main__":
+    
     list_attr=pd.read_csv("list_attr_celeba.txt" , sep=r"\s+", header = 0)
     pos_attr=pd.read_csv("list_landmarks_align_celeba.txt" , sep=r"\s+", header = 0)
 
@@ -101,12 +102,13 @@ if __name__ == "__main__":
 
     #PR RUN SUR ORDI OUIAM
     #PR RUN SUR ORDI OUIAM
-    image_1 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000001.jpg")
-    image_2 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000002.jpg")
-    image_3 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000003.jpg")
-    image_4 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000004.jpg")
-    image_5 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000005.jpg")
-    image_10 = Image.open("/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/000010.jpg")
+
+    image_1 = Image.open("./000001.jpg")
+    image_2 = Image.open("./000002.jpg")
+    image_3 = Image.open("./000003.jpg")
+    image_4 = Image.open("./000004.jpg")
+    image_5 = Image.open("./000005.jpg")
+    image_10 = Image.open("./000010.jpg")
 
 
 
@@ -145,6 +147,7 @@ if __name__ == "__main__":
     face1 = Image.open("000004.jpg")
     face2 = Image.open("000001.jpg")
     #print(face1)
+    
 
     blended_face = blend_faces(image_1, image_2, alpha=0.45)
     #print(blended_face)

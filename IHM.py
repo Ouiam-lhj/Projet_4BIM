@@ -10,7 +10,7 @@ from code_gen_blend import *
 #pip install customtkinter
 #pip install CTkListbox
 #pip install tkinter
-#pip install PIL
+#pip install Pillow
 #pip install CTkSpinbox
 
 class ImageDisplayError(Exception):
@@ -138,7 +138,7 @@ class DynamicGrid():
         else:
             raise MethodError("Un mot clef incorrect a été utilisé pour le passage de génération")
         
-        self.images = [new_face_floue for i in range(6)]
+        self.figures = list(map(lambda x : Image.fromarray(x), [new_face_floue for i in range(6)]))
         self.destroyGrid()
         self.displayImages(source="FIGURES")
 
@@ -172,6 +172,7 @@ class DynamicGrid():
             #Si la grille se supprime sans rien afficher, alors le keyword est le pb
             return
 
+        print(self.images)
         for i in range(self.columns):
             currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="transparent")
             currentFrame.pack(expand=True, fill="both", side="left")
@@ -219,10 +220,10 @@ class IHM():
 
         self.root.title("Le profiler des zencoders")
 
-        self.principalMainframe = CTkFrame(self.root, fg_color="#38393b", border_width = 0)
+        self.principalMainframe = CTkFrame(self.root, fg_color="#ffffff", border_width = 0)
         self.menuMainframe = CTkFrame(self.root, width= 200)
-        self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#00FF00", height = 70)
-        self.photosFrame = CTkFrame(self.principalMainframe, height = 500)
+        self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff", height = 70)
+        self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff")
 
         self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#FF0000", height = 50)
         self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFC0CB", height = 50)
@@ -230,14 +231,14 @@ class IHM():
         self.rightSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FF4500", height = 50)
         self.consignes_label = CTkLabel(self.photosFrame, text="Bienvenue\nVeuillez remplir le formulaire pour commencer", font=("Arial", 30), text_color="#38393b")
 
-        self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
-        self.menuExportButton = CTkButton(self.menuMainframe, text="Exporter", command=self.displayExportWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
-        self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
-        self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'])
+        self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.menuExportButton = CTkButton(self.menuMainframe, text="Exporter", command=self.displayExportWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
-        self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
-        self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération précédente", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
-        self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération Suivante", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'])
+        self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération précédente", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération Suivante", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         
         self.principalMainframe.pack(expand=True, fill="both", side="right")
         self.menuMainframe.pack(fill="y", side="left")
@@ -250,7 +251,7 @@ class IHM():
         self.previousGenButton.pack(side="left")
         self.newGenButton.pack(side="left")
         self.nextGenButton.pack(side="left")
-        self.consignes_label.pack(expand=True, side="top", pady=50)
+        self.consignes_label.pack(expand=True, fill="both", side="top", pady=200)
 
         self.menuFormButton.pack(fill="x", pady=10)
         self.menuExportButton.pack(fill="x", pady=10)
@@ -265,13 +266,13 @@ class IHM():
         app.configure(bg="#f5f5f5")
         app.grid_rowconfigure(0, weight=1)
         app.grid_columnconfigure(0, weight=1)
-        app.grab_set()
 
         # Scrollable frame
         scroll = CTkScrollableFrame(app, width=500, height=600, fg_color="#ffffff")
         scroll.grid(row=0, column=0, columnspan=3, sticky="nsew")
         scroll.grid_rowconfigure(0, weight=1)
         scroll.grid_columnconfigure(0, weight=1)
+        app.grab_set()
         
         # Définition des variables
         titre = "Questionnaire de pré-sélection"
@@ -371,6 +372,8 @@ class IHM():
         return reponses
 
     def displayGrid(self):
+        if self.consignes_label.winfo_exists():
+            self.consignes_label.pack_forget()
         self.grid.setHeight(self.photosFrame.winfo_height())
         self.grid.setWidth(self.photosFrame.winfo_width())
 
