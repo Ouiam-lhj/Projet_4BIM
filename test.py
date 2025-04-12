@@ -362,7 +362,7 @@ vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_t
 
 
 #Les commentaires restants sont pour tester le réaffichage des images à partir des matrices de RGB.
-
+#Reste à mettre vae_best_model.h5 et vae_last_model.h5 dans un sous dossier VAE d'un dossier weights.
 
 
 
