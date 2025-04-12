@@ -16,23 +16,11 @@ from PIL import Image
 import tensorflow as tf
 
 
-print(" Liste des GPUs disponibles :", tf.config.list_physical_devices('GPU'))
-
-try:
-    tf.debugging.set_log_device_placement(True)
-    with tf.device('/device:GPU:0'):
-        print(" Exécution d'un test sur GPU")
-        a = tf.constant([[1.0, 2.0, 3.0]])
-        b = tf.constant([[4.0], [5.0], [6.0]])
-        c = tf.matmul(a, b)
-        print("Résultat du test :", c.numpy())
-except Exception as e:
-    print(" Erreur d'utilisation du GPU :", e)
-
-
 WEIGHTS_FOLDER = './weights/'
 DATA_FOLDER = './img_align_celeba/'
 Z_DIM = 200
+
+
 
 if not os.path.exists(WEIGHTS_FOLDER):
   os.makedirs(os.path.join(WEIGHTS_FOLDER,"AE"))
@@ -43,19 +31,59 @@ NUM_IMAGES = len(filenames)
 print("Total number of images : " + str(NUM_IMAGES))
 
 
+
+
+
 def build_decoder(test=False, out_size=(128, 128)):
+    """Construit une fonction de décodage d'image à partir d'un chemin de fichier.
+
+    Args:
+        test (bool): Si True, retourne une fonction de décodage simple (image uniquement),
+                     sinon retourne une fonction renvoyant un tuple (image, image) pour l'entraînement.
+        out_size (tuple, optional): Taille de sortie de l'image redimensionnée. Par défaut (128, 128).
+
+    Returns:
+        Callable: Fonction de décodage adaptée au mode (test ou entraînement).
+    """
     def decoder(path):
+        """Lit une image à partir d'un chemin, la redimensionne et la normalise.
+
+        Args:
+            path (tf.Tensor): Chemin de l'image à charger.
+
+        Returns:
+            tf.Tensor: Image normalisée (float32, valeurs entre 0 et 1).
+        """
         img = file_bytes = tf.io.read_file(path)
         img = tf.image.decode_jpeg(file_bytes, channels=3)  
         img = tf.image.resize(img, (128, 128))
         img = tf.cast(img, tf.float32) / 255.0
         return img
     def decoder_train(path):
+        """Retourne une paire d'images identiques pour l'entraînement (entrée et cible identiques).
+
+        Args:
+            path (tf.Tensor): Chemin de l'image à charger.
+
+        Returns:
+            tuple: (image, image)
+        """
         return decoder(path), decoder(path)
 
     return decoder if test else decoder_train
 
 def build_dataset(paths, test=False, shuffle=1, batch_size=1):
+    """Crée un objet `tf.data.Dataset` à partir de chemins d'images.
+
+    Args:
+        paths (array-like): Liste des chemins vers les images.
+        test (bool): Si `True`, ne retourne que les images (pas de paires).
+        shuffle (int): Taille du buffer de mélange.
+        batch_size (int): Taille des batchs.
+
+    Returns:
+        tf.data.Dataset: Dataset prétraité prêt pour l'entraînement ou l'évaluation.
+    """
     AUTO = tf.data.experimental.AUTOTUNE
     decoder = build_decoder(test)
 
@@ -72,19 +100,24 @@ train_paths, valid_paths, _, _ = train_test_split(filenames, filenames, test_siz
 train_dataset = build_dataset(train_paths, batch_size=128)
 valid_dataset = build_dataset(valid_paths, batch_size=128)
 
-
 class VariableAutoencoder:
+    """Classe représentant un Autoencodeur Variationnel (VAE)."""
     def __init__(self):
+        """Initialise les hyperparamètres et les modèles vides."""
         self.input_dim = (128,128,3)
         self.batch_size = 512
-        self.z_dim = 200 # Dimension of the latent vector (z)
+        self.z_dim = 200 
         self.learning_rate = 0.0005
         self.var_autoencoder_model = None
         self.var_encoder_model = None
         self.var_decoder_model = None
 
     def build(self):
-        #Encoder
+        """Construit l'encodeur, le décodeur et le modèle VAE complet.
+
+        Cette méthode crée les couches Keras, définit la fonction de perte VAE 
+        (perte de reconstruction + divergence KL), puis compile le modèle.
+        """
         input_encoder = Input(shape=(self.input_dim))
         x = Conv2D(32, kernel_size=(3, 3), strides = 2, padding='same', name='encoder_conv2d_1')(input_encoder)
         x = LeakyReLU()(x)
@@ -100,6 +133,14 @@ class VariableAutoencoder:
         latent_log_var = Dense(self.z_dim, name='latent_log_var')(x)
         
         def sampling(args=None):
+            """Échantillonnage de la variable latente z à partir de la distribution gaussienne.
+
+            Args:
+                args (tuple): Moyenne (z_mean) et log-variance (z_log_var) de la distribution latente.
+
+            Returns:
+                tf.Tensor: Vecteur latent échantillonné.
+            """
             z_mean, z_log_var = args
             batch = K.shape(z_mean)[0]
 
@@ -146,6 +187,11 @@ class VariableAutoencoder:
         return None
 
     def get_varencoder(self):
+        """Renvoie le modèle encodeur VAE.
+
+        Returns:
+            keras.Model or None: Modèle encodeur, ou `None` s'il n'a pas été construit.
+        """
         if self.var_encoder_model is not None:
             return self.var_encoder_model
         else:
@@ -153,6 +199,11 @@ class VariableAutoencoder:
             return None
 
     def get_vardecoder(self):
+        """Renvoie le modèle décodeur VAE.
+
+        Returns:
+            keras.Model or None: Modèle décodeur, ou `None` s'il n'a pas été construit.
+        """
         if self.var_decoder_model is not None:
             return self.var_decoder_model
         else:
@@ -160,11 +211,17 @@ class VariableAutoencoder:
             return None
     
     def get_varautoencoder(self):
+        """Renvoie le modèle complet VAE.
+
+        Returns:
+            keras.Model or None: Modèle autoencodeur complet, ou `None` s'il n'a pas été construit.
+        """
         if self.var_autoencoder_model is not None:
             return self.var_autoencoder_model
         else:
             print("Variable Autoencoder model has not been defined!")
             return None
+
 
 
 var_model = VariableAutoencoder()
@@ -175,18 +232,17 @@ var_encoder = var_model.get_varencoder()
 var_decoder = var_model.get_vardecoder()
 var_autoencoder.summary()
 
+
 test_dataset = build_dataset(valid_paths, test=True)
 var_autoencoder.load_weights(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_last_model.h5'))
-
-
 data = list(test_dataset.take(20))
-
 
 output_folder = "image_file"
 os.makedirs(output_folder, exist_ok=True)
 
 
-for n in range(0, 14, 2):
+for n in range(0, 12, 2):
+    '''Renvoie 6 images dans un dossier image_file pour y accéder facilement'''
     fig, ax = plt.subplots(figsize=(8, 8))
     image = var_autoencoder.predict(data[n])
 
@@ -195,7 +251,6 @@ for n in range(0, 14, 2):
 
     plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
-    # Chemin complet vers l'image dans le dossier
     image_path = os.path.join(output_folder, f'image_{n}.png')
     plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
 
@@ -203,7 +258,6 @@ for n in range(0, 14, 2):
 
 plt.show()
 
-from PIL import Image
 
 image_folder = "image_file"
 
@@ -214,12 +268,104 @@ image_files = sorted([
 
 images = []
 for file in image_files:
+    '''Renvoie une matrice contennat des valeurs RGB pour chaque pixel'''
     img = Image.open(file).convert('RGB')  
     img_array = np.array(img)
     images.append(img_array)
 
 image_matrix = np.stack(images)
 
-print("Shape of image matrix:", image_matrix.shape)
+print(image_matrix)
+
+# for i in range(len(image_matrix)):
+#     plt.figure(figsize=(4, 4))
+#     plt.imshow(image_matrix[i])
+#     plt.axis('off')
+#     plt.title(f"Image {i}")
+#     plt.show()
+
+def load_images_from_folder(folder, image_size=(128, 128)):
+    """Charge toutes les images du dossier image_file et les redimensionne."""
+    images = []
+    image_files = sorted([f for f in os.listdir(folder) if f.endswith('.png')])
+    
+    for file in image_files:
+        img_path = os.path.join(folder, file)
+        img = Image.open(img_path).convert('RGB')
+        img = img.resize(image_size)
+        img_array = np.array(img) / 255.0  
+        images.append(img_array)
+    
+    return np.array(images)
+
+
+def mutate_latent_vector(latent_vector, mutation_strength=0.5):
+    """Applique une mutation aléatoire au vecteur latent."""
+    mutation = np.random.normal(0, mutation_strength, latent_vector.shape)
+    mutated_latent_vector = latent_vector + mutation
+    return mutated_latent_vector
+
+
+def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=10, mutation_strength=0.5, output_folder="image_file_mod"):
+    """
+    Génère des versions mutées des images dans un dossier à partir de leurs vecteurs latents.
+    
+    Args:
+        var_encoder (Model): Le modèle encodeur du VAE.
+        var_decoder (Model): Le modèle décodeur du VAE.
+        folder (str): Le dossier contenant les images à modifier.
+        new_to_show (int): Le nombre d'images à générer.
+        mutation_strength (float): L'intensité de la mutation à appliquer aux vecteurs latents.
+        output_folder (str): Le dossier où les images modifiées seront sauvegardées.
+    """
+    
+    images = load_images_from_folder(folder) 
+    selected_images = images[:new_to_show] 
+    latent_vectors = var_encoder.predict(selected_images)
+    mutated_latent_vectors = np.array([mutate_latent_vector(latent_vector, mutation_strength) for latent_vector in latent_vectors])
+    mutated_images = var_decoder.predict(mutated_latent_vectors)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for n in range(new_to_show):
+        fig, ax = plt.subplots(figsize=(8, 8))
+        ax.imshow(np.squeeze(mutated_images[n]))
+        ax.axis("off")   
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        image_path = os.path.join(output_folder, f'image_{n}.png')
+        plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
+        plt.close(fig)
+    image_files = sorted([
+        os.path.join(output_folder, f) for f in os.listdir(output_folder)
+        if f.endswith('.png')
+    ])
+    image_matrix_mod = []
+    for file in image_files:
+        img = Image.open(file).convert('RGB')  
+        img_array = np.array(img)
+        image_matrix_mod.append(img_array)
+
+    image_matrix_mod = np.stack(image_matrix_mod)
+    print(image_matrix_mod)
+
+
+    # fig, axes = plt.subplots(2, 3, figsize=(15, 10))  # 2 lignes, 3 colonnes
+
+    # for i in range(image_matrix_mod.shape[0]):
+    #     ax = axes[i // 3, i % 3]  # Calculer l'index des sous-graphes
+    #     ax.imshow(image_matrix_mod[i])
+    #     ax.axis('off')
+
+    plt.show()
+
+vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=0.5, output_folder="image_file_mod")
+
+
+#Les commentaires restants sont pour tester le réaffichage des images à partir des matrices de RGB.
+
+
+
+
+
 
 
