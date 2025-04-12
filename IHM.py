@@ -216,7 +216,7 @@ class IHM():
         self.root.mainloop()
 
     def homePage(self):
-        self.images = ["000001.jpg","000002.jpg","000003.jpg","000004.jpg","000005.jpg","000006.jpg"]
+        self.images = ["image_0.png","image_2.png","image_4.png","image_6.png","image_8.png","image_10.png"]
 
         self.root.title("Le profiler des zencoders")
 
