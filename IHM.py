@@ -101,10 +101,7 @@ class DynamicGrid():
         return images
     
     def loadImages(self, links):
-        print("chargement des images..")
         self.images = list(map(lambda x : Image.open(x), links))
-        print(self.images)
-        print("Les images sont chargées !")
 
     def addImage(self, image):
         self.images.append(image)
@@ -156,7 +153,6 @@ class DynamicGrid():
     def displayImages(self, source = "LINK", add_to_history = False):
         # La frame doit être un objet CTkFrame
         # images est une liste d'images
-        print("Image à afficher : {}".format(self.images))
         if (self.images == []):
             raise ImageDisplayError
         
@@ -165,7 +161,6 @@ class DynamicGrid():
 
         images_displayed=0
 
-        print(self.images)
         nb_images = len(self.images)
         self.get_grid_dimensions(nb_images)
 
@@ -206,19 +201,13 @@ class DynamicGrid():
         self.images = self.images_history[self.index_image_history - 1][0]
         self.displayImages(source="IMAGE", add_to_history=False)
         self.index_image_history -= 1
-        print(self.index_image_history)
-        print(len(self.images_history))
     
     def nextImages(self):
-        print("Current index : {}".format(self.index_image_history))
-        print("Maximum index : {}".format(len(self.images_history)))
         if self.index_image_history == (len(self.images_history) - 1):
             raise ValueError("Impossible de charger des images qui n'ont pas encore été générée")
         self.images = self.images_history[self.index_image_history + 1][0]
         self.displayImages(source="IMAGE", add_to_history=False)
         self.index_image_history += 1
-        print(self.index_image_history)
-        print(len(self.images_history))
 
     def resetImages(self):
         self.selected_images = self.images_history[self.index_image_history - 1][1]
@@ -228,7 +217,6 @@ class DynamicGrid():
         print(len(self.images_history))
 
     def destroyGrid(self):
-        print("destroyGrid has been called !")
         for frame in self.frames:
             print(frame)
             frame.destroy()
@@ -270,10 +258,10 @@ class IHM():
         self.titleFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff", height = 70)
         self.photosFrame = CTkFrame(self.principalMainframe, fg_color="#ffffff")
 
-        self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#FF0000", height = 50)
-        self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFC0CB", height = 50)
-        self.middleSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FFFF00", height = 50)
-        self.rightSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#FF4500", height = 50)
+        self.buttonsFrame=CTkFrame(self.principalMainframe, fg_color="#ffffff", height = 50)
+        self.leftSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#ffffff", height = 50)
+        self.middleSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#ffffff", height = 50)
+        self.rightSideButtonFrame = CTkFrame(self.buttonsFrame, fg_color="#ffffff", height = 50)
         self.consignes_label = CTkLabel(self.photosFrame, text="Bienvenue\nVeuillez remplir le formulaire pour commencer", font=("Arial", 30), text_color="#38393b")
 
         self.menuFormButton = CTkButton(self.menuMainframe, text="Formulaire", command=self.displayFormulaire, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
@@ -281,18 +269,18 @@ class IHM():
         self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
-        self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
-        self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "←", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333',state="disable")
-        self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "→", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333', state="disable")
+        self.newGenButton = CTkButton(self.middleSideButtonFrame, width=100, height=35, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.previousGenButton = CTkButton(self.middleSideButtonFrame, width=50, height=35, text = "←", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333',state="disable")
+        self.nextGenButton = CTkButton(self.middleSideButtonFrame, width=50, height=35, text = "→", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333', state="disable")
         
         self.principalMainframe.pack(expand=True, fill="both", side="right")
         self.menuMainframe.pack(fill="y", side="left")
         self.titleFrame.pack(expand=True, fill="both", side="top")
         self.photosFrame.pack(expand=True, fill="both", side="top")
         self.buttonsFrame.pack(expand=True, fill="both", side="top")
-        self.leftSideButtonFrame.pack(expand=True, fill="both", side="left")
-        self.middleSideButtonFrame.pack(expand=True, fill="both", side="left")
-        self.rightSideButtonFrame.pack(expand=True, fill="both", side="left")
+        self.leftSideButtonFrame.pack(expand=True, fill="x", side="left")
+        self.middleSideButtonFrame.pack(expand=True, fill="x", side="left")
+        self.rightSideButtonFrame.pack(expand=True, fill="x", side="left")
         self.previousGenButton.pack(side="left")
         self.newGenButton.pack(side="left")
         self.nextGenButton.pack(side="left")
@@ -389,9 +377,10 @@ class IHM():
             converted_reponses = self.conversion_reponses(reponses)
             messagebox.showinfo("", "Vos réponses ont bien été enregistrées.")
             app.destroy()
-        print(converted_reponses)
+
+        sample = self.chose_first_sample_photo(self.get_photos_matching_form(converted_reponses))
             
-        return converted_reponses
+        return sample
 
     def conversion_reponses(self, reponses):
         conversions = {
@@ -413,6 +402,26 @@ class IHM():
                 reponses[key] = 0 
 
         return reponses
+
+    def get_photos_matching_form(self, reponses):
+        dropping = []
+        df_attr = pd.read_csv("final_dataset.txt" , sep = "\s+", header=0)
+
+        for key, value in reponses.items():
+            if value == 0:
+                continue
+
+            for index, val in zip(df_attr[key].index, df_attr[key].values):
+                if val != value:  # Correction de 'ind' qui était une variable inexistante
+                    dropping.append(index)
+        df_form = df_attr.drop(dropping)
+
+        return df_form
+    
+    def chose_first_sample_photo(self, df_form):
+        sample = df_form.sample(n=6)
+        return sample.index
+
 
     def displayGrid(self):
         if self.consignes_label.winfo_exists():
@@ -445,54 +454,65 @@ class IHM():
                 self.previousGenButton.configure(state="enable")
 
     def displayParameterWindow(self):
-        # Fenêtre qui correspond aux différents paramètres de l'applications.
-        change = True
         self.disp_window = CTkToplevel(self.root)
         self.disp_window.title("Paramètres")
-        self.disp_window.geometry("300x150")
-        self.disp_window.grab_set()
+        self.disp_window.geometry("360x240")
+        self.disp_window.resizable(False, False)
 
         topFrame = CTkFrame(self.disp_window)
         midFrame = CTkFrame(self.disp_window)
         bottomFrame = CTkFrame(self.disp_window)
 
-        title = CTkLabel(topFrame, text="Paramètres", font=("Arial", 30), wraplength=480)
+        topFrame.pack(pady=10, fill="x")
+        midFrame.pack(padx=20, pady=10, fill="both", expand=True)
+        bottomFrame.pack(pady=10)
 
-        textMP = CTkLabel(midFrame,text="Sélection multiple : ")
+        title = CTkLabel(topFrame, text="Paramètres", font=("Arial", 24, "bold"))
+        title.pack()
+
+        textMP = CTkLabel(midFrame, text="Sélection multiple :")
         self.checkVarMP = StringVar(value="on")
-        checkboxSelecMP = CTkCheckBox(midFrame, text='',command=lambda : self.grid.setUniqueSelection(self.checkVarMP),
-                                     variable=self.checkVarMP, onvalue=True, offvalue=False)
-        
-        textImage = CTkLabel(midFrame, text="Nombre d'images par générations : ")
+        checkboxSelecMP = CTkCheckBox(midFrame, text='', command=lambda: self.grid.setUniqueSelection(self.checkVarMP),variable=self.checkVarMP, onvalue=True, offvalue=False)
+
+        textImage = CTkLabel(midFrame, text="Images par génération :")
         self.nbGenImages = IntVar(value=6)
-        spinboxImages = CTkSpinbox(midFrame, variable = self.nbGenImages, min_value = 4, max_value= 9, width=60, height=15,border_width=0)
+        spinboxImages = CTkSpinbox(midFrame, variable=self.nbGenImages, min_value=4, max_value=9,width=80, height=28, border_width=1)
 
-        textFus = CTkLabel(midFrame,text="Méthode de fusion : ")
+        textFus = CTkLabel(midFrame, text="Méthode de fusion :")
         self.checkVarFus = StringVar(value="BLEND")
-        comboFus = CTkCheckBox(midFrame, text='', values = ['BLEND', 'VAE'], command=lambda : self.grid.setFusionMethod(self.checkVarFus),
-                                     variable=self.checkVarFus)
+        comboFus = CTkComboBox(midFrame, values=['BLEND', 'VAE'], variable=self.checkVarFus,command=lambda: self.grid.setFusionMethod(self.checkVarFus.get()))
 
-        validateButton = CTkButton(bottomFrame, text="Sauvegarder", command = lambda window=self.disp_window: print(self.disp_window.winfo_geometry()))
+        textMP.grid(row=0, column=0, sticky="w", pady=5)
+        checkboxSelecMP.grid(row=0, column=1, sticky="e", pady=5)
+        textImage.grid(row=1, column=0, sticky="w", pady=5)
+        spinboxImages.grid(row=1, column=1, sticky="e", pady=5)
+        textFus.grid(row=2, column=0, sticky="w", pady=5)
+        comboFus.grid(row=2, column=1, sticky="e", pady=5)
 
-        self.disp_window.grid_columnconfigure((0,1,2), weight=1) 
-        topFrame.grid_columnconfigure(0, weight=1)
-        midFrame.grid_columnconfigure((0,1,2), weight=1)
-        bottomFrame.grid_columnconfigure(0, weight=1)
-        topFrame.grid(row = 0, sticky="nsew")
-        midFrame.grid(row = 1, sticky="nsew")
-        bottomFrame.grid(row = 2, sticky="nsew")
+        validateButton = CTkButton(bottomFrame, text="Sauvegarder", command=self.saveParameters)
+        cancelButton = CTkButton(bottomFrame, text="Annuler", fg_color="grey", hover_color="#999",
+                                command=self.confirmCloseWithoutSave)
 
-        title.grid(column = 0, row = 0, sticky="nsew")
-        textMP.grid(column = 0, row = 0, sticky="nsew")
-        checkboxSelecMP.grid(column = 1, row = 0, sticky="nsew")
-        textImage.grid(column = 0, row=1, sticky="nsew")
-        spinboxImages.grid(column = 1, row = 1, sticky="nsew")
-        validateButton.grid(column= 0, padx = 20, pady=10)
-        self.disp_window.protocol("WM_DELETE_WINDOW", lambda val=change : self.destroyParam(change))
-    
-    def destroyParam(self, changed):
-        if changed:
-            messagebox.askquestion("" , "Souhaitez-vous continuer sans enregistrer ?")
+        validateButton.grid(row=0, column=0, padx=10)
+        cancelButton.grid(row=0, column=1, padx=10)
+
+        self.disp_window.protocol("WM_DELETE_WINDOW", self.confirmCloseWithoutSave)
+        self.disp_window.grab_set()  # Capture l’interaction utilisateur
+        self.disp_window.focus_force()  # Met la fenêtre en avant
+
+
+    def confirmCloseWithoutSave(self):
+        response = messagebox.askyesno("Confirmation", "Souhaitez-vous quitter sans sauvegarder ?")
+        if response:
+            self.disp_window.grab_release()
+            self.disp_window.destroy()
+        else:
+            self.disp_window.focus_force()
+
+
+    def saveParameters(self):
+        print("Paramètres sauvegardés.")
+        self.disp_window.grab_release()
         self.disp_window.destroy()
     
     def displayExportWindow(self):
