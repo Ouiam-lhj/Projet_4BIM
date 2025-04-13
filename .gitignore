@@ -7,8 +7,5 @@ algo_gen.ipynb
 00000[0-10].jpg
 __pycache__
 __pycache/*
-<<<<<<< HEAD
 env1
-=======
 test_image*
->>>>>>> refs/remotes/origin/IHM_test
