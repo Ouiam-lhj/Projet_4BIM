@@ -276,6 +276,9 @@ def apply_random_blending(faces, k):
 
     plt.tight_layout()
     plt.show()
+    for face in list_portrait:
+        face = face.resize((250, 250), Image.LANCZOS)
+        
     return list_portrait
 
 

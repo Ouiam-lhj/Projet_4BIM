@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import numpy as np
-import pandas as pd
 from CTkSpinbox import * 
 import io
 from code_gen_blend import *
@@ -97,6 +96,10 @@ class DynamicGrid():
     def setWidth(self, w):
         self.width = w 
 
+    def resizeImages(self, images):
+        images = list(map(lambda x : x.resize((250, 250), Image.LANCZOS), images))
+        return images
+    
     def loadImages(self, links):
         print("chargement des images..")
         self.images = list(map(lambda x : Image.open(x), links))
@@ -135,6 +138,8 @@ class DynamicGrid():
             #On prend simplement les deux premières images
             arrays = apply_random_blending(pil_images,6)
             self.figures = list(map(lambda x: Image.fromarray(x), arrays))
+            self.figures = self.resizeImages(self.figures)
+            print(self.figures[0].size)
             print("FIGURES : {}".format(self.figures))
         # On a obtenue les (ou la dans le cadre du premier test)
         elif (self.fusionMethod == "VAE"):
@@ -196,7 +201,7 @@ class DynamicGrid():
             self.index_image_history += 1
     
     def previousImages(self):
-        if self.index_image_history == 0:
+        if self.index_image_history <= 0:
             raise ValueError("Impossible de charger des images avant la première génération")
         self.images = self.images_history[self.index_image_history - 1][0]
         self.displayImages(source="IMAGE", add_to_history=False)
@@ -384,10 +389,9 @@ class IHM():
             converted_reponses = self.conversion_reponses(reponses)
             messagebox.showinfo("", "Vos réponses ont bien été enregistrées.")
             app.destroy()
-        
-        sample = self.chose_first_sample_photo(self.get_photos_matching_form(converted_reponses))
+        print(converted_reponses)
             
-        return sample
+        return converted_reponses
 
     def conversion_reponses(self, reponses):
         conversions = {
@@ -409,25 +413,6 @@ class IHM():
                 reponses[key] = 0 
 
         return reponses
-
-    def get_photos_matching_form(self, reponses):
-        dropping = []
-        df_attr = pd.read_csv("final_dataset.txt" , sep = "\s+", header=0)
-
-        for key, value in reponses.items():
-            if value == 0:
-                continue
-
-            for index, val in zip(df_attr[key].index, df_attr[key].values):
-                if val != value:  # Correction de 'ind' qui était une variable inexistante
-                    dropping.append(index)
-        df_form = df_attr.drop(dropping)
-
-        return df_form
-    
-    def chose_first_sample_photo(self, df_form):
-        sample = df_form.sample(n=6)
-        return sample.index
 
     def displayGrid(self):
         if self.consignes_label.winfo_exists():
