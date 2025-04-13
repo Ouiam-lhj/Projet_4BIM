@@ -106,7 +106,7 @@ class VariableAutoencoder:
         """Initialise les hyperparamètres et les modèles vides."""
         self.input_dim = (128,128,3)
         self.batch_size = 512
-        self.z_dim = 200 
+        self.z_dim = 200 # Dimension of the latent vector (z)
         self.learning_rate = 0.0005
         self.var_autoencoder_model = None
         self.var_encoder_model = None
@@ -237,46 +237,74 @@ test_dataset = build_dataset(valid_paths, test=True)
 var_autoencoder.load_weights(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_last_model.h5'))
 data = list(test_dataset.take(20))
 
-output_folder = "image_file"
-os.makedirs(output_folder, exist_ok=True)
 
 
-for n in range(0, 12, 2):
-    '''Renvoie 6 images dans un dossier image_file pour y accéder facilement'''
-    fig, ax = plt.subplots(figsize=(8, 8))
-    image = var_autoencoder.predict(data[n])
+def generate_images_from_data(data, var_autoencoder, output_folder="image_file"):
+    """
+    Génère 6 images à partir des données en utilisant un autoencodeur
+    et les enregistre dans un dossier spécifié.
 
-    ax.imshow(np.squeeze(image))
-    ax.axis("off")
+    Args:
+        data (numpy.ndarray): Données d'entrée.
+        var_autoencoder (Model): Modèle autoencodeur utilisé pour prédire les images.
+        output_folder (str): Nom du dossier où enregistrer les images.
 
-    plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    Returns:
+        list: Chemins des images générées.
+    """
+    os.makedirs(output_folder, exist_ok=True)
+    image_paths = []
 
-    image_path = os.path.join(output_folder, f'image_{n}.png')
-    plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
+    for n in range(0, 12, 2):
+        fig, ax = plt.subplots(figsize=(8, 8))
+        image = var_autoencoder.predict(data[n])
 
-    plt.close(fig)
+        ax.imshow(np.squeeze(image))
+        ax.axis("off")
 
-plt.show()
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+        image_path = os.path.join(output_folder, f'image_{n}.png')
+        plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
+        image_paths.append(image_path)
+
+        plt.close(fig)
+
+    plt.show()
+    return image_paths
+
+generated_image_paths = generate_images_from_data(data, var_autoencoder)
 
 
-image_folder = "image_file"
 
-image_files = sorted([
-    os.path.join(image_folder, f) for f in os.listdir(image_folder)
-    if f.endswith('.png')
-])
+def load_images_as_matrix(image_folder="image_file"):
+    """
+    Charge les images .png depuis un dossier et retourne une matrice RGB.
 
-images = []
-for file in image_files:
-    '''Renvoie une matrice contennat des valeurs RGB pour chaque pixel'''
-    img = Image.open(file).convert('RGB')  
-    img_array = np.array(img)
-    images.append(img_array)
+    Args:
+        image_folder (str): Chemin du dossier contenant les images.
 
-image_matrix = np.stack(images)
+    Returns:
+        np.ndarray: Matrice contenant les valeurs RGB des images.
+    """
+    image_files = sorted([
+        os.path.join(image_folder, f) for f in os.listdir(image_folder)
+        if f.endswith('.png')
+    ])
 
-print(image_matrix)
+    images = []
+    for file in image_files:
+        '''Renvoie une matrice contenant des valeurs RGB pour chaque pixel'''
+        img = Image.open(file).convert('RGB')  
+        img_array = np.array(img)
+        images.append(img_array)
 
+    image_matrix = np.stack(images)
+
+    return image_matrix
+
+
+#image_matrix = load_images_as_matrix("image_file")
 # for i in range(len(image_matrix)):
 #     plt.figure(figsize=(4, 4))
 #     plt.imshow(image_matrix[i])
@@ -293,7 +321,7 @@ def load_images_from_folder(folder, image_size=(128, 128)):
         img_path = os.path.join(folder, file)
         img = Image.open(img_path).convert('RGB')
         img = img.resize(image_size)
-        img_array = np.array(img) / 255.0  
+        img_array = np.array(img) / 255.0  # Normalisation des valeurs RGB
         images.append(img_array)
     
     return np.array(images)
@@ -317,13 +345,16 @@ def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", n
         new_to_show (int): Le nombre d'images à générer.
         mutation_strength (float): L'intensité de la mutation à appliquer aux vecteurs latents.
         output_folder (str): Le dossier où les images modifiées seront sauvegardées.
-    """
     
+    Returns:
+        np.ndarray: Matrice contenant les images modifiées au format RGB.
+    """
     images = load_images_from_folder(folder) 
     selected_images = images[:new_to_show] 
     latent_vectors = var_encoder.predict(selected_images)
     mutated_latent_vectors = np.array([mutate_latent_vector(latent_vector, mutation_strength) for latent_vector in latent_vectors])
     mutated_images = var_decoder.predict(mutated_latent_vectors)
+
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -335,6 +366,7 @@ def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", n
         image_path = os.path.join(output_folder, f'image_{n}.png')
         plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
         plt.close(fig)
+
     image_files = sorted([
         os.path.join(output_folder, f) for f in os.listdir(output_folder)
         if f.endswith('.png')
@@ -348,24 +380,31 @@ def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", n
     image_matrix_mod = np.stack(image_matrix_mod)
     print(image_matrix_mod)
 
-
-    # fig, axes = plt.subplots(2, 3, figsize=(15, 10))  # 2 lignes, 3 colonnes
-
-    # for i in range(image_matrix_mod.shape[0]):
-    #     ax = axes[i // 3, i % 3]  # Calculer l'index des sous-graphes
-    #     ax.imshow(image_matrix_mod[i])
-    #     ax.axis('off')
-
     plt.show()
+    
+    return image_matrix_mod
+
+
+
 
 vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=0.5, output_folder="image_file_mod")
 
 
-#Les commentaires restants sont pour tester le réaffichage des images à partir des matrices de RGB.
-#Reste à mettre vae_best_model.h5 et vae_last_model.h5 dans un sous dossier VAE d'un dossier weights.
+
+# def vae_generate_images(new_to_show=10):
+#     random_codes = np.random.normal(size=(new_to_show, 200))
+#     new_faces = var_decoder.predict(np.array(random_codes))
+
+#     fig = plt.figure(figsize=(30, 15))
+
+#     for i in range(new_to_show):
+#         ax = fig.add_subplot(6, 10, i+1)
+#         ax.imshow(new_faces[i])
+#         ax.axis('off')
+#     plt.show()
 
 
-
+# vae_generate_images(10)
 
 
 
