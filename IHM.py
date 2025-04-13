@@ -384,9 +384,10 @@ class IHM():
             converted_reponses = self.conversion_reponses(reponses)
             messagebox.showinfo("", "Vos réponses ont bien été enregistrées.")
             app.destroy()
-        print(converted_reponses)
+        
+        sample = self.chose_first_sample_photo(self.get_photos_matching_form(converted_reponses))
             
-        return converted_reponses
+        return sample
 
     def conversion_reponses(self, reponses):
         conversions = {
@@ -423,6 +424,10 @@ class IHM():
         df_form = df_attr.drop(dropping)
 
         return df_form
+    
+    def chose_first_sample_photo(self, df_form):
+        sample = df_form.sample(n=6)
+        return sample.index
 
     def displayGrid(self):
         if self.consignes_label.winfo_exists():
