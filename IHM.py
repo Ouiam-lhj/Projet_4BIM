@@ -39,6 +39,8 @@ class DynamicGrid():
         self.isEmpty = True
         self.unique_selection = unique_selection
         self.fusionMethod = "BLEND"
+        self.images_history = []
+        self.index_image_history = -1
     
     def figsToImage(self):
         for fig in self.figures :
@@ -47,6 +49,11 @@ class DynamicGrid():
             buf.seek(0)
             img = Image.open(buf)
     
+    def getIndexHistory(self):
+        return self.index_image_history
+    
+    def maxIndexHistory(self):
+        return len(self.images_history)
     # Permet de modifier les figures qui sont utilisée
     def setFigures(self, figures):
         self.figures = figures
@@ -125,28 +132,25 @@ class DynamicGrid():
         # On les passes à l'algo génétique
         if self.fusionMethod == "BLEND":
             #On prend simplement les deux premières images
-            blended_face = blend_faces(pil_images[0], pil_images[1], alpha=0.45)
-            new_face = blended_face[0]
-            new_face_attr = blended_face[1]
-            new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
-            
-            print(type(new_face_floue))
-
+            arrays = apply_random_blending(pil_images,6)
+            self.figures = list(map(lambda x: Image.fromarray(x), arrays))
+            print("FIGURES : {}".format(self.figures))
         # On a obtenue les (ou la dans le cadre du premier test)
         elif (self.fusionMethod == "VAE"):
             print("Il me faut les mutations pour réaliser la fusions des codes")
         else:
             raise MethodError("Un mot clef incorrect a été utilisé pour le passage de génération")
-        
-        self.figures = list(map(lambda x : Image.fromarray(x), [new_face_floue for i in range(6)]))
+    
         self.destroyGrid()
-        self.displayImages(source="FIGURES")
+        self.displayImages(source="FIGURES", add_to_history=True)
+        self.selected_images = []
 
 
         # Le résultat est stocké dans une variable et on display les images.
-    def displayImages(self, source = "LINK"):
+    def displayImages(self, source = "LINK", add_to_history = False):
         # La frame doit être un objet CTkFrame
         # images est une liste d'images
+        print("Image à afficher : {}".format(self.images))
         if (self.images == []):
             raise ImageDisplayError
         
@@ -168,11 +172,12 @@ class DynamicGrid():
             self.ToCTkImage(images_size,source)
         elif source == "FIGURES":
             self.ToCTkImage(images_size,source)
+        elif source == "IMAGE":
+            pass
         else:
-            #Si la grille se supprime sans rien afficher, alors le keyword est le pb
             return
 
-        print(self.images)
+        print("Image à afficher : {}".format(self.images))
         for i in range(self.columns):
             currentFrame = CTkFrame(self.parentFrame, width=width_frame, height=height_frame, fg_color="transparent")
             currentFrame.pack(expand=True, fill="both", side="left")
@@ -183,7 +188,39 @@ class DynamicGrid():
                 button.configure(command = (lambda button=button, img=self.images[j] : self.changeButtonColor(button, img)))
             images_displayed += self.rows
         self.isEmpty = False
+
+        if add_to_history == True:
+            print("Ajout à l'historique")
+            self.images_history.append([self.images.copy(), self.selected_images.copy()])
+            self.index_image_history += 1
     
+    def previousImages(self):
+        if self.index_image_history == 0:
+            raise ValueError("Impossible de charger des images avant la première génération")
+        self.images = self.images_history[self.index_image_history - 1][0]
+        self.displayImages(source="IMAGE", add_to_history=False)
+        self.index_image_history -= 1
+        print(self.index_image_history)
+        print(len(self.images_history))
+    
+    def nextImages(self):
+        print("Current index : {}".format(self.index_image_history))
+        print("Maximum index : {}".format(len(self.images_history)))
+        if self.index_image_history == (len(self.images_history) - 1):
+            raise ValueError("Impossible de charger des images qui n'ont pas encore été générée")
+        self.images = self.images_history[self.index_image_history + 1][0]
+        self.displayImages(source="IMAGE", add_to_history=False)
+        self.index_image_history += 1
+        print(self.index_image_history)
+        print(len(self.images_history))
+
+    def resetImages(self):
+        self.selected_images = self.images_history[self.index_image_history - 1][1]
+        self.algoGen()
+        self.index_image_history += 1
+        print(self.index_image_history)
+        print(len(self.images_history))
+
     def destroyGrid(self):
         print("destroyGrid has been called !")
         for frame in self.frames:
@@ -219,6 +256,8 @@ class IHM():
         self.images = ["image_0.png","image_2.png","image_4.png","image_6.png","image_8.png","image_10.png"]
 
         self.root.title("Le profiler des zencoders")
+        self.root.geometry("960x590")
+        self.root.resizable(False, False)
 
         self.principalMainframe = CTkFrame(self.root, fg_color="#ffffff", border_width = 0)
         self.menuMainframe = CTkFrame(self.root, width= 200)
@@ -237,8 +276,8 @@ class IHM():
         self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
         self.newGenButton = CTkButton(self.middleSideButtonFrame, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
-        self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération précédente", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
-        self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "Génération Suivante", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
+        self.previousGenButton = CTkButton(self.middleSideButtonFrame, text = "←", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333',state="disable")
+        self.nextGenButton = CTkButton(self.middleSideButtonFrame, text = "→", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333', state="disable")
         
         self.principalMainframe.pack(expand=True, fill="both", side="right")
         self.menuMainframe.pack(fill="y", side="left")
@@ -257,7 +296,6 @@ class IHM():
         self.menuExportButton.pack(fill="x", pady=10)
         self.menuParamButton.pack(fill="x", pady=10)
         self.photo.pack(fill="x", pady=15)
-
 
     def displayFormulaire(self):
         app = CTkToplevel(self.root)
@@ -304,7 +342,6 @@ class IHM():
 
         self.combobox_age = CTkComboBox(scroll, values=["Jeune", "Agé", "Je ne sais pas"], width=200, height=20, font=("Arial", font_size_questions), state="readonly", fg_color="#ffffff", text_color=text_color)
         self.combobox_age.set("Sélectionner")
-
 
         # Bouton de validation
         button = CTkButton(scroll, text="Valider", font=("Arial", font_size_questions), width=200, height=30, command=lambda: self.close_window(app), fg_color="#528868", text_color="#ffffff")
@@ -374,22 +411,32 @@ class IHM():
     def displayGrid(self):
         if self.consignes_label.winfo_exists():
             self.consignes_label.pack_forget()
+        print(self.root.winfo_geometry())
         self.grid.setHeight(self.photosFrame.winfo_height())
         self.grid.setWidth(self.photosFrame.winfo_width())
 
-        self.grid.displayImages()
+
+        self.grid.displayImages(add_to_history=True)
     
     def nextGen(self):
-        print("Pas implémenté")
+        self.grid.nextImages()
+        self.updateButtonStatus()
     
     def previousGen(self):
-        print("Pas implémenté")
-    
-    def displayExportWindow(self):
-        exp_window = CTkToplevel(self.root)
-        exp_window.title("Exporter")
-        exp_window.geometry("450x300")
-        exp_window.grab_set()
+        self.grid.previousImages()
+        self.updateButtonStatus()
+
+    def updateButtonStatus(self):
+        if (self.grid.maxIndexHistory() == 0):
+            self.newGenButton.configure(state = "disable")
+            self.previousGenButton.configure(state = "disable")
+        else:
+            if (self.grid.getIndexHistory() == 0):
+                self.newGenButton.configure(state = "enable")
+                self.previousGenButton.configure(state="disable")
+            elif (self.grid.getIndexHistory() == self.grid.maxIndexHistory()):
+                self.newGenButton.configure(state = "disable")
+                self.previousGenButton.configure(state="enable")
 
     def displayParameterWindow(self):
         # Fenêtre qui correspond aux différents paramètres de l'applications.
@@ -441,9 +488,73 @@ class IHM():
         if changed:
             messagebox.askquestion("" , "Souhaitez-vous continuer sans enregistrer ?")
         self.disp_window.destroy()
+    
+    def displayExportWindow(self):
+
+        self.export_window = CTkToplevel(self.root)
+        self.export_window.title("Export")
+        self.export_window.geometry("400x250")
+
+        label_folder = CTkLabel(self.export_window, text="Choisissez un dossier d'exportation")
+        self.folder_path_var = StringVar(value="")
+        self.folder_entry = CTkEntry(self.export_window, textvariable=self.folder_path_var, width=300)
+        folder_btn = CTkButton(self.export_window, text="Sélectionner un dossier", command=self.select_folder)
         
+        label_format = CTkLabel(self.export_window, text="Choisissez un format de sortie")   
+        self.format_options = ["PNG", "JPG"]
+        self.format_var = StringVar(value="PNG")
+        self.format_menu = CTkOptionMenu(self.export_window, variable=self.format_var, values=self.format_options)
+
+        label_folder.pack(pady=(20, 10))
+        self.folder_entry.pack()
+        folder_btn.pack(pady=(10, 10))
+        label_format.pack(pady=(10, 5))
+        self.format_menu.pack()
+
+        export_btn = CTkButton(self.export_window, text="Exportation Image", command=self.export_images)
+        export_btn.pack(pady=(20, 10))
 
 
+
+    def select_folder(self):
+        folder = filedialog.askdirectory()
+        if folder:
+            self.folder_path_var.set(folder)
+
+
+    def export_images(self):
+        folder = self.folder_path_var.get()
+        if not folder:
+            messagebox.showerror("Erreur", "Sélectionnez un dossier pour l'export !")
+            return
+        
+        export_format = self.format_var.get()
+
+        if not self.grid.selected_images :
+            messagebox.showerror("Erreur", "Pas d'images sélectionnée pour l'export !")
+            return
+
+
+        count = 1
+        pil_images = list(map(lambda x : x.cget("light_image"), self.grid.selected_images))
+        for pil_img in pil_images:
+
+            if export_format == "JPG":
+                if pil_img.mode in ("RGBA", "P"):
+                    pil_img = pil_img.convert("RGB")
+            file_path = os.path.join(folder, f"test_image_{count}.{export_format.lower()}")
+
+            try:
+                pil_img.save(file_path)
+
+            except Exception as e:
+                messagebox.showerror("Erreur d'exportation", f"Impossible de sauvegarder l'image {count} : {str(e)}")
+                return
+            count += 1
+
+        messagebox.showinfo("Export", "Les images ont été exportées avec succès !")
+        self.export_window.destroy()
+        
 
 if __name__ == "__main__":
     test = IHM()

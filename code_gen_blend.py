@@ -356,6 +356,74 @@ def apply_random_modification(faces):
 
     return faces_modifiées
 
+def apply_random_blending(faces, k):
+    """
+    Blend and blur random face combinations.
+    If only two faces are provided, apply multiple alpha blending.
+    If more, blend k random pairs and display them in a grid (auto-sized).
+    Also saves the results as images.
+    """
+    faces = test_list_visage(faces)
+
+    # Détermination automatique des lignes/colonnes selon k (max 3 colonnes)
+    cols = 3
+    rows = math.ceil(k / cols)
+
+    fig, axes = plt.subplots(rows, cols, figsize=(4 * cols, 4 * rows))
+    axes = np.array(axes).reshape(-1)  # flatten even if 1D or 2D
+    list_portrait = []
+
+    if len(faces) == 2:
+        alphas = list(np.linspace(0.3, 0.6, k))
+        for i, alpha in enumerate(alphas): 
+            blended_face = blend_faces(faces[0], faces[1], alpha=alpha)
+            new_face = blended_face[0]
+            new_face_attr = blended_face[1]
+            new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+
+            axes[i].imshow(new_face_floue)
+            axes[i].axis('off')
+
+            list_portrait.append(new_face_floue)
+
+    elif len(faces) > 2:
+        i = 0
+        seen_ids = set()
+        while i < k:
+            k_idx = random.randint(0, len(faces) - 1)
+            s_idx = random.randint(0, len(faces) - 1)
+
+            # Boucle jusqu'à ce qu'on ait un index différent
+            while s_idx == k_idx:
+                s_idx = random.randint(0, len(faces) - 1)
+
+            blended_face = blend_faces(faces[k_idx], faces[s_idx], alpha=0.45)
+            new_face = blended_face[0]
+            new_face_attr = blended_face[1]
+            new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+
+            # Vérification de similarité : 3 derniers caractères de l'ID
+            hex_id = hex(id(new_face_floue))
+            short_id = hex_id[-3:]
+
+            if short_id in seen_ids:
+                continue  # Trop similaire → skip
+
+            seen_ids.add(short_id)
+
+            axes[i].imshow(new_face_floue)
+            axes[i].axis('off')
+
+            list_portrait.append(new_face_floue)
+            i += 1
+
+    # Cache les axes restants s’il y en a (ex : 5 images → 6 cases créées)
+    for j in range(k, len(axes)):
+        axes[j].axis('off')
+        
+    return list_portrait
+
+
 if __name__ == "__main__":
     
     list_attr=pd.read_csv("list_attr_celeba.txt" , sep=r"\s+", header = 0)
