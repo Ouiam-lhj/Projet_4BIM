@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox
 from PIL import Image, ImageTk
 import numpy as np
+import pandas as pd
 from CTkSpinbox import * 
 import io
 from code_gen_blend import *
@@ -407,6 +408,21 @@ class IHM():
                 reponses[key] = 0 
 
         return reponses
+
+    def get_photos_matching_form(self, reponses):
+        dropping = []
+        df_attr = pd.read_csv("final_dataset.txt" , sep = "\s+", header=0)
+
+        for key, value in reponses.items():
+            if value == 0:
+                continue
+
+            for index, val in zip(df_attr[key].index, df_attr[key].values):
+                if val != value:  # Correction de 'ind' qui était une variable inexistante
+                    dropping.append(index)
+        df_form = df_attr.drop(dropping)
+
+        return df_form
 
     def displayGrid(self):
         if self.consignes_label.winfo_exists():
