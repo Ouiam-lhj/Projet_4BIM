@@ -14,6 +14,9 @@ import pandas as pd
 import cv2
 #!pip install dlib
 import dlib
+import os
+import math
+
 
 def align_face(img, landmarks_init, landmarks_fin, size=(256, 256)):
     """Aligne un visage en utilisant une transformation homographique basée sur les 68 landmarks."""
@@ -38,27 +41,6 @@ def get_landmarks(image):
     landmarks = predictor(gray, faces[0])
     return np.array([[landmarks.part(i).x, landmarks.part(i).y] for i in range(68)])
 
-def blend_faces(face1, face2, alpha=0.5):
-    """Fusionne deux visages avec un mélange pondéré (taux alpha)."""
-    landmarks1 = get_landmarks(face1)
-    landmarks2 = get_landmarks(face2)
-
-    if landmarks1 is None or landmarks2 is None:
-        print("Erreur : Impossible de détecter les landmarks pour au moins un visage.")
-        return None, None
-    avg_pos_attr = np.mean([landmarks1, landmarks2], axis=0).astype(int)
-
-    aligned_face_1 = align_face(face1, landmarks1, avg_pos_attr)
-    aligned_face_2 = align_face(face2, landmarks2, avg_pos_attr)
-
-    blended_face = cv2.addWeighted(aligned_face_1, alpha, aligned_face_2, 1 - alpha, 0)
-    blended_face_pil = Image.fromarray(blended_face)
-
-    return blended_face_pil, avg_pos_attr, blended_face
-
-
-
-
 def draw_landmarks(image):
     """Dessine les 68 points caractéristiques sur l'image."""
     image = np.array(image)
@@ -66,8 +48,6 @@ def draw_landmarks(image):
     for (x, y) in landmarks:
         cv2.circle(image, (x, y), 1, (0, 0, 255), -1)
     return image
-
-
 
 def apply_blur_around_face(image, landmarks, blur_strength):
     """Applique un flou autour du visage en utilisant les landmarks."""
@@ -86,7 +66,295 @@ def apply_blur_around_face(image, landmarks, blur_strength):
     return combined_image
 
 
+def blend_faces(face1, face2, alpha=0.5):
+    """Fusionne deux visages avec un mélange pondéré (taux alpha)."""
+    landmarks1 = get_landmarks(face1)
+    landmarks2 = get_landmarks(face2)
 
+    if landmarks1 is None or landmarks2 is None:
+        print("Erreur : Impossible de détecter les landmarks pour au moins un visage.")
+        return None, None
+    avg_pos_attr = np.mean([landmarks1, landmarks2], axis=0).astype(int)
+
+    aligned_face_1 = align_face(face1, landmarks1, avg_pos_attr)
+    aligned_face_2 = align_face(face2, landmarks2, avg_pos_attr)
+
+    blended_face = cv2.addWeighted(aligned_face_1, alpha, aligned_face_2, 1 - alpha, 0)
+    blended_face_pil = Image.fromarray(blended_face)
+
+    return blended_face_pil, avg_pos_attr, blended_face
+
+def find_closest_landmark(landmarks, point):
+    """Trouve l'index du landmark le plus proche d'un point donné."""
+    landmarks = np.array(landmarks)
+    distances = np.linalg.norm(landmarks - np.array(point), axis=1)  # Distance Euclidienne
+    return np.argmin(distances)  # Index du plus proche
+
+def ajuster_visage(face, landmarks_init, landmarks_fin):
+    """Applique une déformation locale avec interpolation triangulaire tout en conservant le reste de l'image."""
+    if landmarks_init is None or landmarks_fin is None:
+        print("Erreur : Impossible de réaliser l'ajustement du visage.")
+        print("Il manque des landmarks.")
+        return None
+
+    if isinstance(face, Image.Image):
+        face = np.array(face)
+    
+    h, w = face.shape[:2]
+    rect = (0, 0, w, h)
+    subdiv = cv2.Subdiv2D(rect)
+
+    for lm in landmarks_init:
+        subdiv.insert((float(lm[0]), float(lm[1])))  
+    triangles = subdiv.getTriangleList().astype(int)
+    masque_visage = np.zeros((h, w), dtype=np.uint8)
+    new_face = np.zeros_like(face)
+
+    for tri in triangles:
+        x1, y1, x2, y2, x3, y3 = tri
+        idx1 = find_closest_landmark(landmarks_init, (x1, y1))
+        idx2 = find_closest_landmark(landmarks_init, (x2, y2))
+        idx3 = find_closest_landmark(landmarks_init, (x3, y3))
+        pts1 = np.array([landmarks_init[idx1], landmarks_init[idx2], landmarks_init[idx3]], np.float32)
+        pts2 = np.array([landmarks_fin[idx1], landmarks_fin[idx2], landmarks_fin[idx3]], np.float32)
+
+        M = cv2.getAffineTransform(pts1, pts2)
+        warped_triangle = cv2.warpAffine(face, M, (w, h))
+        mask = np.zeros((h, w), dtype=np.uint8)
+        cv2.fillConvexPoly(mask, np.int32([pts2]), 255)
+        masque_visage = cv2.bitwise_or(masque_visage, mask)
+        new_face = cv2.bitwise_or(new_face, cv2.bitwise_and(warped_triangle, warped_triangle, mask=mask))
+
+    face_sans_visage = cv2.bitwise_and(face, face, mask=cv2.bitwise_not(masque_visage))
+    image_finale = cv2.bitwise_or(face_sans_visage, new_face)
+
+    return Image.fromarray(image_finale)
+
+def modifier_landmarks(face, valeur, attribut="yeux", direction="centre"):
+    """
+    Modifie les landmarks :
+    oeil gauche : 36-41
+    oeil droit : 42-47
+    bouche : 48-68
+    nez : 27-35
+    contour du visage : 0-16
+
+    Renvoie le visage déformé.
+    """
+    landmarks = get_landmarks(face)
+    new_landmarks = landmarks.copy()
+    if attribut=="yeux":
+        oeil_gauche = list(range(36, 42))
+        oeil_droit = list(range(42, 48))
+        if direction=="centre":
+            new_landmarks[oeil_gauche] +=[valeur, 0]
+            new_landmarks[oeil_droit] +=[-valeur, 0]
+        if direction=="bord":
+            new_landmarks[oeil_gauche] +=[-valeur, 0]
+            new_landmarks[oeil_droit] +=[valeur, 0]
+        if direction=="bas":
+            new_landmarks[oeil_gauche] +=[0, -valeur]
+            new_landmarks[oeil_droit] +=[0, -valeur]
+        if direction=="haut":
+            new_landmarks[oeil_gauche] +=[0, valeur]
+            new_landmarks[oeil_droit] +=[0, valeur]
+            
+        return ajuster_visage(face, landmarks, new_landmarks)
+        
+    if attribut=="bouche":
+        bouche = list(range(48, 68))
+        if direction=="droite":
+            new_landmarks[bouche] +=[valeur, 0]
+        if direction=="gauche":
+            new_landmarks[bouche] +=[-valeur, 0]
+        if direction=="bas":
+            new_landmarks[bouche] +=[0, valeur]
+        if direction=="haut":
+            new_landmarks[bouche] +=[0, -valeur]
+        return ajuster_visage(face, landmarks, new_landmarks)
+        
+    if attribut=="nez":
+        nez = list(range(27, 36))
+        if direction=="droite":
+            new_landmarks[nez] +=[valeur, 0]
+        if direction=="gauche":
+            new_landmarks[nez] +=[-valeur, 0]
+        if direction=="bas":
+            new_landmarks[nez] +=[0, valeur]
+        if direction=="haut":
+            new_landmarks[nez] +=[0, -valeur]
+        return ajuster_visage(face, landmarks, new_landmarks)
+    return
+
+def crop(face):
+    """Enlève les bordures noires."""
+    if isinstance(face, np.ndarray):
+        face = Image.fromarray(face)
+    face = face.crop((0, 0, 178, 218))
+
+    return face
+def mix_main(face1, face2, alpha):
+    blended_face = blend_faces(face1, face2, alpha)
+    new_face = blended_face[0]
+    new_face_attr = blended_face[1]
+    new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+
+    new_face_floue_crop = crop(new_face_floue)
+    #new_face_floue_crop = draw_landmarks(new_face_floue_crop)
+    return new_face_floue_crop
+
+#####################################
+
+#FONCTION QUI BLEND ALEAT UNE LIST D'IMAGE ET EN RENVOIE K
+#####################################
+def test_visage_non_detect(image):
+    detector = dlib.get_frontal_face_detector()
+    image = np.array(image)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    faces = detector(gray)
+    if len(faces) == 0:
+        return False
+    return True
+
+def test_list_visage(list_visage):
+    list_finale = []
+    for visage in list_visage:
+        if test_visage_non_detect(visage) : list_finale.append(visage)
+    return list_finale
+
+def apply_random_blending(faces, k):
+    """
+    Blend and blur random face combinations.
+    If only two faces are provided, apply multiple alpha blending.
+    If more, blend k random pairs and display them in a grid (auto-sized).
+    Also saves the results as images.
+    """
+    faces = test_list_visage(faces)
+
+    save_path = "/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/pièces_jointes"
+
+    # Détermination automatique des lignes/colonnes selon k (max 3 colonnes)
+    cols = 3
+    rows = math.ceil(k / cols)
+
+    fig, axes = plt.subplots(rows, cols, figsize=(4 * cols, 4 * rows))
+    axes = np.array(axes).reshape(-1)  # flatten even if 1D or 2D
+    list_portrait=[]
+    if len(faces) == 2:
+        alphas = list(np.linspace(0.3, 0.6, k))
+        for i, alpha in enumerate(alphas):
+            blended_face = blend_faces(faces[0], faces[1], alpha=alpha)
+            new_face = blended_face[0]
+            new_face_attr = blended_face[1]
+            new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+
+            axes[i].imshow(new_face_floue)
+            axes[i].axis('off')
+
+            file_path = os.path.join(save_path, f"blended_{i}.png")
+            new_face_floue.save(file_path)
+            list_portrait.append(new_face_floue)
+    elif len(faces) > 2:
+        for i in range(k):
+            k_idx = random.randint(0, len(faces) - 1)
+            s_idx = random.randint(0, len(faces) - 1)
+
+            blended_face = blend_faces(faces[k_idx], faces[s_idx], alpha=0.45)
+            new_face = blended_face[0]
+            new_face_attr = blended_face[1]
+            new_face_floue = apply_blur_around_face(new_face, new_face_attr, blur_strength=11)
+
+            axes[i].imshow(new_face_floue)
+            axes[i].axis('off')
+
+            file_path = os.path.join(save_path, f"blended_{i}.png")
+            new_face_floue.save(file_path)
+            list_portrait.append(new_face_floue)
+    # Cache les axes restants s’il y en a (ex : 5 images → 6 cases créées)
+    for j in range(k, len(axes)):
+        axes[j].axis('off')
+
+    plt.tight_layout()
+    plt.show()
+    return list_portrait
+
+
+#####################################
+
+#FONCTION QUI applique mutation ALEAT UNE LIST D'IMAGE ET la RENVOIE
+#####################################
+
+def mutation_aleatoire(image, proba=0.1):
+    proba_rand = np.random.rand()
+    if proba_rand>proba : return image
+    attribut_rand = random.randint(1, 3)
+    direction_rand = random.randint(1, 4)
+
+    if attribut_rand==1 :
+        attribut = "yeux"
+        if direction_rand==1 :
+            direction = "centre"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==2 :
+            direction = "bord"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==3 :
+            direction = "bas"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==4 :
+            direction = "haut"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+
+    if attribut_rand==2 :
+        attribut = "bouche"
+        if direction_rand==1 :
+            direction = "droite"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==2 :
+            direction = "gauche"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==3 :
+            direction = "bas"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==4 :
+            direction = "haut"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+
+    if attribut_rand==3 :
+        attribut = "nez"
+        if direction_rand==1 :
+            direction = "droite"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==2 :
+            direction = "gauche"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==3 :
+            direction = "bas"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+        elif direction_rand==4 :
+            direction = "haut"
+            new_image = modifier_landmarks(image, 2, attribut=attribut, direction=direction)
+            return new_image
+
+
+def apply_random_modification(faces):
+    faces_modifiées=[]
+    for face in faces:
+        faces_modifiées.append(mutation_aleatoire(face, proba=0.1))
+
+
+    return faces_modifiées
 
 if __name__ == "__main__":
     
