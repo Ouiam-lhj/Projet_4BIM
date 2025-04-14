@@ -17,5 +17,5 @@ pip install pandas
 pip install opencv-python
 pip install dlib
 pip install pandas
-pip install tensorflow
+pip install tensorflow ou pip install tensorflow-macos et pip install tensorflow-metal (Mac)
 pip install scikit-learn
