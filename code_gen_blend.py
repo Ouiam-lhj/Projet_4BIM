@@ -201,6 +201,9 @@ def apply_random_blending(faces, k):
     If more, blend k random pairs and display them in a grid (auto-sized).
     Also saves the results as images.
     """
+    faces = [face.resize((250, 250), Image.LANCZOS) for face in faces]
+    faces = test_list_visage(faces)
+
     faces = test_list_visage(faces)
 
     save_path = "/Users/ouiamelhajji/Documents/INSA/4A/S2/devweb/pièces_jointes"
@@ -248,8 +251,7 @@ def apply_random_blending(faces, k):
 
     plt.tight_layout()
     plt.show()
-    for face in list_portrait:
-        face = face.resize((250, 250), Image.LANCZOS)
+
 
     return list_portrait
 
