@@ -1,5 +1,5 @@
 import numpy as np
-
+import tensorflow as tf
 from tensorflow import keras 
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.layers import Input, Conv2D, Flatten, Dense, Conv2DTranspose, Reshape, Lambda, Activation, LeakyReLU
@@ -12,28 +12,15 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import os
 from glob import glob
-
+from PIL import Image
 import tensorflow as tf
-
-print("🔍 Liste des GPUs disponibles :", tf.config.list_physical_devices('GPU'))
-
-try:
-    tf.debugging.set_log_device_placement(True)
-    with tf.device('/device:GPU:0'):
-        print(" Exécution d'un test sur GPU")
-        a = tf.constant([[1.0, 2.0, 3.0]])
-        b = tf.constant([[4.0], [5.0], [6.0]])
-        c = tf.matmul(a, b)
-        print("Résultat du test :", c.numpy())
-except Exception as e:
-    print(" Erreur d'utilisation du GPU :", e)
-
-
 
 
 WEIGHTS_FOLDER = './weights/'
 DATA_FOLDER = './img_align_celeba/'
 Z_DIM = 200
+
+
 
 if not os.path.exists(WEIGHTS_FOLDER):
   os.makedirs(os.path.join(WEIGHTS_FOLDER,"AE"))
@@ -43,19 +30,60 @@ filenames = np.array(glob(os.path.join(DATA_FOLDER, '*.jpg')))
 NUM_IMAGES = len(filenames)
 print("Total number of images : " + str(NUM_IMAGES))
 
+
+
+
+
 def build_decoder(test=False, out_size=(128, 128)):
+    """Construit une fonction de décodage d'image à partir d'un chemin de fichier.
+
+    Args:
+        test (bool): Si True, retourne une fonction de décodage simple (image uniquement),
+                     sinon retourne une fonction renvoyant un tuple (image, image) pour l'entraînement.
+        out_size (tuple, optional): Taille de sortie de l'image redimensionnée. Par défaut (128, 128).
+
+    Returns:
+        Callable: Fonction de décodage adaptée au mode (test ou entraînement).
+    """
     def decoder(path):
+        """Lit une image à partir d'un chemin, la redimensionne et la normalise.
+
+        Args:
+            path (tf.Tensor): Chemin de l'image à charger.
+
+        Returns:
+            tf.Tensor: Image normalisée (float32, valeurs entre 0 et 1).
+        """
         img = file_bytes = tf.io.read_file(path)
         img = tf.image.decode_jpeg(file_bytes, channels=3)  
         img = tf.image.resize(img, (128, 128))
         img = tf.cast(img, tf.float32) / 255.0
         return img
     def decoder_train(path):
+        """Retourne une paire d'images identiques pour l'entraînement (entrée et cible identiques).
+
+        Args:
+            path (tf.Tensor): Chemin de l'image à charger.
+
+        Returns:
+            tuple: (image, image)
+        """
         return decoder(path), decoder(path)
 
     return decoder if test else decoder_train
 
 def build_dataset(paths, test=False, shuffle=1, batch_size=1):
+    """Crée un objet `tf.data.Dataset` à partir de chemins d'images.
+
+    Args:
+        paths (array-like): Liste des chemins vers les images.
+        test (bool): Si `True`, ne retourne que les images (pas de paires).
+        shuffle (int): Taille du buffer de mélange.
+        batch_size (int): Taille des batchs.
+
+    Returns:
+        tf.data.Dataset: Dataset prétraité prêt pour l'entraînement ou l'évaluation.
+    """
     AUTO = tf.data.experimental.AUTOTUNE
     decoder = build_decoder(test)
 
@@ -67,156 +95,15 @@ def build_dataset(paths, test=False, shuffle=1, batch_size=1):
     return dset
 
 
-train_paths, valid_paths, _, _ = train_test_split(filenames, filenames, test_size=0.5, shuffle=True)
+train_paths, valid_paths, _, _ = train_test_split(filenames, filenames, test_size=0.2, shuffle=True)
 
 train_dataset = build_dataset(train_paths, batch_size=128)
 valid_dataset = build_dataset(valid_paths, batch_size=128)
 
-
-# class ConvAutoencoder:
-#     def __init__(self):
-#         self.input_dim = (128,128,3)
-#         self.batch_size = 512
-#         self.latentDim = 200
-#         self.z_dim = 200 # Dimension of the latent vector (z)
-#         self.autoencoder_model = None
-#         self.encoder_model = None
-#         self.decoder_model = None
-
-#     #@staticmethod
-#     def build(self):
-#         inputs = Input(shape = self.input_dim)
-#         x = inputs
-        
-#         filters=(32, 64, 64, 64)
-        
-#         for index, f in enumerate(filters):
-#             x = Conv2D(f, (3,3), strides=2, padding="same", name="conv2dtranspose_" + str(index))(x)
-#             x = LeakyReLU()(x)
-        
-#         volumeSize = K.int_shape(x)
-#         x = Flatten()(x)
-#         latent = Dense(self.latentDim)(x)
-#         self.encoder_model = Model(inputs, latent, name = "encoder")
-        
-#         latentInputs = Input(shape=(self.latentDim,))
-#         x = Dense(np.prod(volumeSize[1:]))(latentInputs)
-#         x = Reshape((volumeSize[1], volumeSize[2], volumeSize[3]))(x)
-        
-#         for f in [64, 64, 32]:
-#             x = Conv2DTranspose(f, (3, 3), strides=2, padding="same")(x)
-#             x = LeakyReLU()(x)
-
-#         x = Conv2DTranspose(3, (3, 3), strides=2, padding="same")(x)
-#         outputs = Activation("sigmoid")(x)
-#         self.decoder_model = Model(latentInputs, outputs, name="decoder")
-#         self.autoencoder_model = Model(inputs, self.decoder_model(self.encoder_model(inputs)),name="autoencoder")
-        
-#         return None
-    
-#     def get_encoder(self):
-#         if self.encoder_model is not None:
-#             return self.encoder_model
-#         else:
-#             print("Encoder model has not been defined!")
-#             return None
-
-#     def get_decoder(self):
-#         if self.decoder_model is not None:
-#             return self.decoder_model
-#         else:
-#             print("Decoder model has not been defined!")
-#             return None
-    
-#     def get_autoencoder(self):
-#         if self.autoencoder_model is not None:
-#             return self.autoencoder_model
-#         else:
-#             print("Autoencoder model has not been defined!")
-#             return None
-
-
-# model = ConvAutoencoder()
-# model.build()
-# encoder = model.get_encoder()
-# decoder = model.get_decoder()
-# autoencoder = model.get_autoencoder()
-# encoder.summary()
-# decoder.summary()
-# autoencoder.summary()
-
-
-#LEARNING_RATE = 0.0005
-#N_EPOCHS = 20
-
-#optimizer = Adam(lr = LEARNING_RATE)
-
-#def r_loss(y_true, y_pred):
- #   return K.mean(K.square(y_true - y_pred), axis = [1,2,3])
-
-#autoencoder.compile(optimizer=optimizer, loss = r_loss)
-#
-#checkpoint_ae_best = ModelCheckpoint(os.path.join(WEIGHTS_FOLDER, 'AE/autoencoder_best_weights.h5'), 
-#                                     monitor='val_loss',
- #                                    mode='min',
- #                                    save_best_only=True,
- #                                    save_weights_only = False, 
- #                                    verbose=1)
-#
-#checkpoint_ae_last = ModelCheckpoint(os.path.join(WEIGHTS_FOLDER, 'AE/autoencoder_last_weights.h5'), 
- #                                    monitor='val_loss',
- #                                    mode='min',
- #                                    save_best_only=True,
- #                                    save_weights_only = False, 
- #                                    verbose=1)
-
-
-#autoencoder.fit(train_dataset,
-#                epochs=10,
-#                callbacks=[checkpoint_ae_best, checkpoint_ae_last],
-#                validation_data=valid_dataset)
-
-
-# test_dataset = build_dataset(valid_paths, test=True)
-# autoencoder.load_weights('./weights/AE/autoencoder_last_weights.h5')
-# data = list(test_dataset.take(20))
-
-# fig = plt.figure(figsize=(30, 10))
-# for n in range(0, 20, 2):
-#     image = autoencoder.predict(data[n])
-    
-#     plt.subplot(2, 10, n + 1)
-#     plt.imshow(np.squeeze(data[n]))
-#     plt.title('original image')
-    
-#     plt.subplot(2, 10, n + 2)
-#     plt.imshow(np.squeeze(image))
-#     plt.title('reconstruct')
-    
-# plt.show()
-
-
-#data = list(test_dataset.take(20))
-
-#fig = plt.figure(figsize=(30, 10))
-#for n in range(0, 20, 2):
-#    image = encoder.predict(data[n])
-#    image += np.random.normal(0.0, 1.0, size = (Z_DIM)) #inject noise to the encoded vector
-#    reconst_images = decoder.predict(image)
-    
-#    plt.subplot(2, 10, n + 1)
-#    plt.imshow(np.squeeze(data[n]))
-#    plt.title('original image')
-#    
-#    plt.subplot(2, 10, n + 2)
-#    plt.imshow(np.squeeze(reconst_images))
-#    plt.title('Reconstruct noisy image')
-    
-#plt.show()
-
-
 class VariableAutoencoder:
+    """Classe représentant un Autoencodeur Variationnel (VAE)."""
     def __init__(self):
+        """Initialise les hyperparamètres et les modèles vides."""
         self.input_dim = (128,128,3)
         self.batch_size = 512
         self.z_dim = 200 # Dimension of the latent vector (z)
@@ -226,7 +113,11 @@ class VariableAutoencoder:
         self.var_decoder_model = None
 
     def build(self):
-        #Encoder
+        """Construit l'encodeur, le décodeur et le modèle VAE complet.
+
+        Cette méthode crée les couches Keras, définit la fonction de perte VAE 
+        (perte de reconstruction + divergence KL), puis compile le modèle.
+        """
         input_encoder = Input(shape=(self.input_dim))
         x = Conv2D(32, kernel_size=(3, 3), strides = 2, padding='same', name='encoder_conv2d_1')(input_encoder)
         x = LeakyReLU()(x)
@@ -242,6 +133,14 @@ class VariableAutoencoder:
         latent_log_var = Dense(self.z_dim, name='latent_log_var')(x)
         
         def sampling(args=None):
+            """Échantillonnage de la variable latente z à partir de la distribution gaussienne.
+
+            Args:
+                args (tuple): Moyenne (z_mean) et log-variance (z_log_var) de la distribution latente.
+
+            Returns:
+                tf.Tensor: Vecteur latent échantillonné.
+            """
             z_mean, z_log_var = args
             batch = K.shape(z_mean)[0]
 
@@ -288,6 +187,11 @@ class VariableAutoencoder:
         return None
 
     def get_varencoder(self):
+        """Renvoie le modèle encodeur VAE.
+
+        Returns:
+            keras.Model or None: Modèle encodeur, ou `None` s'il n'a pas été construit.
+        """
         if self.var_encoder_model is not None:
             return self.var_encoder_model
         else:
@@ -295,6 +199,11 @@ class VariableAutoencoder:
             return None
 
     def get_vardecoder(self):
+        """Renvoie le modèle décodeur VAE.
+
+        Returns:
+            keras.Model or None: Modèle décodeur, ou `None` s'il n'a pas été construit.
+        """
         if self.var_decoder_model is not None:
             return self.var_decoder_model
         else:
@@ -302,11 +211,17 @@ class VariableAutoencoder:
             return None
     
     def get_varautoencoder(self):
+        """Renvoie le modèle complet VAE.
+
+        Returns:
+            keras.Model or None: Modèle autoencodeur complet, ou `None` s'il n'a pas été construit.
+        """
         if self.var_autoencoder_model is not None:
             return self.var_autoencoder_model
         else:
             print("Variable Autoencoder model has not been defined!")
-            return None 
+            return None
+
 
 
 var_model = VariableAutoencoder()
@@ -317,87 +232,131 @@ var_encoder = var_model.get_varencoder()
 var_decoder = var_model.get_vardecoder()
 var_autoencoder.summary()
 
-#VAE_N_EPOCHS = 6
-
-#checkpoint_vae_best = ModelCheckpoint(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_best_model.h5'), 
-#                                      monitor='val_loss',
-#                                      mode='min',
-#                                      save_best_only=True,
-#                                      save_weights_only = True, 
-#                                      verbose=1)
-    
-#checkpoint_vae_last = ModelCheckpoint(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_last_model.h5'),
-#                                      monitor='val_loss',
-#                                      mode='min',
-#                                      verbose=1,
-#                                      save_best_only=False,
-#                                      save_weights_only=True)
-
-#var_autoencoder.fit(train_dataset,
-#                    epochs=VAE_N_EPOCHS,
-#                    callbacks=[checkpoint_vae_best, checkpoint_vae_last],
-#                    validation_data=valid_dataset)
-
-
 
 test_dataset = build_dataset(valid_paths, test=True)
 var_autoencoder.load_weights(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_last_model.h5'))
-
-
 data = list(test_dataset.take(20))
 
 
-L=[]
-for n in range(0, 12, 2):
-    fig = plt.figure(figsize=(30, 10))
-    image = var_autoencoder.predict(data[n])
+
+def generate_images_from_data(data, var_autoencoder, output_folder="image_file"):
+    """
+    Génère 6 images à partir des données en utilisant un autoencodeur
+    et les enregistre dans un dossier spécifié.
+
+    Args:
+        data (numpy.ndarray): Données d'entrée.
+        var_autoencoder (Model): Modèle autoencodeur utilisé pour prédire les images.
+        output_folder (str): Nom du dossier où enregistrer les images.
+
+    Returns:
+        list: Chemins des images générées.
+    """
+    os.makedirs(output_folder, exist_ok=True)
+    image_paths = []
+
+    for n in range(0, 12, 2):
+        fig, ax = plt.subplots(figsize=(8, 8))
+        image = var_autoencoder.predict(data[n])
+
+        ax.imshow(np.squeeze(image))
+        ax.axis("off")
+
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
+        image_path = os.path.join(output_folder, f'image_{n}.png')
+        plt.savefig(image_path, bbox_inches='tight', pad_inches=0)
+        image_paths.append(image_path)
+
+        plt.close(fig)
+
+    plt.show()
+    return image_paths
+
+generated_image_paths = generate_images_from_data(data, var_autoencoder)
+
+
+
+def load_images_as_matrix(image_folder="image_file"):
+    """
+    Charge les images .png depuis un dossier et retourne une matrice RGB.
+
+    Args:
+        image_folder (str): Chemin du dossier contenant les images.
+
+    Returns:
+        np.ndarray: Matrice contenant les valeurs RGB des images.
+    """
+    image_files = sorted([
+        os.path.join(image_folder, f) for f in os.listdir(image_folder)
+        if f.endswith('.png')
+    ])
+
+    images = []
+    for file in image_files:
+        '''Renvoie une matrice contenant des valeurs RGB pour chaque pixel'''
+        img = Image.open(file).convert('RGB')  
+        img_array = np.array(img)
+        images.append(img_array)
+
+    image_matrix = np.stack(images)
+
+    return image_matrix
+
+
+#image_matrix = load_images_as_matrix("image_file")
+# for i in range(len(image_matrix)):
+#     plt.figure(figsize=(4, 4))
+#     plt.imshow(image_matrix[i])
+#     plt.axis('off')
+#     plt.title(f"Image {i}")
+#     plt.show()
+
+def load_images_from_folder(images, image_size=(128, 128)):
+    """Charge toutes les images du dossier image_file et les redimensionne."""
     
-    # plt.subplot(2, 10, n + 1)
-    # plt.imshow(np.squeeze(data[n]))
-    # plt.title('original image')
+    for img in images:
+        img = img.convert('RGB')
+        img = img.resize(image_size)
+        img_array = np.array(img) / 255.0  # Normalisation des valeurs RGB
+        images.append(img_array)
     
-    #plt.subplot(2, 10, n+2)
-    plt.imshow(np.squeeze(image))
-    L.append(fig)
-    # plt.title('reconstruct')
-print(L)
-plt.show()
+    return np.array(images)
 
 
-#def vae_generate_images(new_to_show=10):
-  #  random_codes = np.random.normal(size=(new_to_show, 200))
- #   new_faces = var_decoder.predict(np.array(random_codes))
-#
- #   fig = plt.figure(figsize=(30, 15))
-#
-#    for i in range(new_to_show):
- #       ax.imshow(new_faces[i])
-#        ax.axis('off')
-#    plt.show()
+def mutate_latent_vector(latent_vector, mutation_strength=0.5):
+    """Applique une mutation aléatoire au vecteur latent."""
+    mutation = np.random.normal(0, mutation_strength, latent_vector.shape)
+    mutated_latent_vector = latent_vector + mutation
+
+    return mutated_latent_vector
 
 
-#vae_generate_images(30)
-
-
-
+def vae_generate_mutated_images(var_encoder, var_decoder, images, new_to_show=10, mutation_strength=0.5):
+    selected_images = images[:new_to_show]
+    image_arrays = np.stack([np.array(img) for img in selected_images])
+    latent_vectors = var_encoder.predict(image_arrays)
+    mutated_latent_vectors = np.array([mutate_latent_vector(latent_vector, mutation_strength) for latent_vector in latent_vectors])
+    mutated_images = var_decoder.predict(mutated_latent_vectors)
+    image_list = [Image.fromarray((np.squeeze(img)).astype(np.uint8)) for img in mutated_images]
+    
+    return image_list
+    
 
 
 
 
+# def vae_generate_images(new_to_show=10):
+#     random_codes = np.random.normal(size=(new_to_show, 200))
+#     new_faces = var_decoder.predict(np.array(random_codes))
+
+#     fig = plt.figure(figsize=(30, 15))
+
+#     for i in range(new_to_show):
+#         ax = fig.add_subplot(6, 10, i+1)
+#         ax.imshow(new_faces[i])
+#         ax.axis('off')
+#     plt.show()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# vae_generate_images(10)

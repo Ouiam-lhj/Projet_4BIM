@@ -6,6 +6,7 @@ import numpy as np
 from CTkSpinbox import * 
 import io
 from code_gen_blend import *
+from autoencoder import *
 
 #pip install customtkinter
 #pip install CTkListbox
@@ -24,7 +25,7 @@ class MethodError(Exception):
 class DynamicGrid():
     
     
-    def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01, unique_selection = False):
+    def __init__(self, links, parentFrame, grid_width, grid_height, margin=0.01, multi_selection = True):
         self.parentFrame = parentFrame
         self.links = links # Modifier links par les vecteurs latents. Si liens, pas nécessaire de modifier
         self.loadImages(links) # Fonction ne marche qu'avec des liens, si nécessaire, rajouter une fonction pour les vecteurs latents
@@ -37,8 +38,9 @@ class DynamicGrid():
         self.rows = 0
         self.columns = 0
         self.isEmpty = True
-        self.unique_selection = unique_selection
+        self.multi_selection = multi_selection
         self.fusionMethod = "BLEND"
+        self.nbImage = 7
         self.images_history = []
         self.index_image_history = -1
     
@@ -133,7 +135,7 @@ class DynamicGrid():
         # On les passes à l'algo génétique
         if self.fusionMethod == "BLEND":
             #On prend simplement les deux premières images
-            arrays = apply_random_blending(pil_images,6)
+            arrays = apply_random_blending(pil_images,self.nbImage)
             self.figures = list(map(lambda x: Image.fromarray(x), arrays))
             self.figures = self.resizeImages(self.figures)
             print(self.figures[0].size)
@@ -141,6 +143,8 @@ class DynamicGrid():
         # On a obtenue les (ou la dans le cadre du premier test)
         elif (self.fusionMethod == "VAE"):
             print("Il me faut les mutations pour réaliser la fusions des codes")
+            pil_images = vae_generate_mutated_images(var_encoder, var_decoder, self.selected_images, new_to_show=self.nbImage, mutation_strength=0.5)
+            self.figures = self.resizeImages(self.figures)
         else:
             raise MethodError("Un mot clef incorrect a été utilisé pour le passage de génération")
     
@@ -459,6 +463,7 @@ class IHM():
         self.disp_window.geometry("360x240")
         self.disp_window.resizable(False, False)
 
+        # Frames
         topFrame = CTkFrame(self.disp_window)
         midFrame = CTkFrame(self.disp_window)
         bottomFrame = CTkFrame(self.disp_window)
@@ -470,18 +475,27 @@ class IHM():
         title = CTkLabel(topFrame, text="Paramètres", font=("Arial", 24, "bold"))
         title.pack()
 
+        # Variables temporaires
+        self.temp_checkVarMP = BooleanVar(value=self.grid.multi_selection)
+        print(self.temp_checkVarMP.get())
+        self.temp_nbGenImages = IntVar(value=self.grid.nbImage)
+        self.temp_checkVarFus = StringVar(value=self.grid.fusionMethod)
+
+        # Sélection multiple
         textMP = CTkLabel(midFrame, text="Sélection multiple :")
-        self.checkVarMP = StringVar(value="on")
-        checkboxSelecMP = CTkCheckBox(midFrame, text='', command=lambda: self.grid.setUniqueSelection(self.checkVarMP),variable=self.checkVarMP, onvalue=True, offvalue=False)
+        checkboxSelecMP = CTkCheckBox(midFrame, text='', variable=self.temp_checkVarMP)
 
+        # Nombre d’images
         textImage = CTkLabel(midFrame, text="Images par génération :")
-        self.nbGenImages = IntVar(value=6)
-        spinboxImages = CTkSpinbox(midFrame, variable=self.nbGenImages, min_value=4, max_value=9,width=80, height=28, border_width=1)
+        spinboxImages = CTkSpinbox(midFrame, variable=self.temp_nbGenImages, min_value=4, max_value=9,
+                                width=80, height=28, border_width=1)
+        spinboxImages.set(self.grid.nbImage)
 
+        # Méthode de fusion
         textFus = CTkLabel(midFrame, text="Méthode de fusion :")
-        self.checkVarFus = StringVar(value="BLEND")
-        comboFus = CTkComboBox(midFrame, values=['BLEND', 'VAE'], variable=self.checkVarFus,command=lambda: self.grid.setFusionMethod(self.checkVarFus.get()))
+        comboFus = CTkComboBox(midFrame, values=['BLEND', 'VAE'], variable=self.temp_checkVarFus)
 
+        # Placement
         textMP.grid(row=0, column=0, sticky="w", pady=5)
         checkboxSelecMP.grid(row=0, column=1, sticky="e", pady=5)
         textImage.grid(row=1, column=0, sticky="w", pady=5)
@@ -489,6 +503,7 @@ class IHM():
         textFus.grid(row=2, column=0, sticky="w", pady=5)
         comboFus.grid(row=2, column=1, sticky="e", pady=5)
 
+        # Boutons
         validateButton = CTkButton(bottomFrame, text="Sauvegarder", command=self.saveParameters)
         cancelButton = CTkButton(bottomFrame, text="Annuler", fg_color="grey", hover_color="#999",
                                 command=self.confirmCloseWithoutSave)
@@ -496,9 +511,10 @@ class IHM():
         validateButton.grid(row=0, column=0, padx=10)
         cancelButton.grid(row=0, column=1, padx=10)
 
+        # Gestion fermeture
         self.disp_window.protocol("WM_DELETE_WINDOW", self.confirmCloseWithoutSave)
-        self.disp_window.grab_set()  # Capture l’interaction utilisateur
-        self.disp_window.focus_force()  # Met la fenêtre en avant
+        self.disp_window.grab_set()
+        self.disp_window.focus_force()
 
 
     def confirmCloseWithoutSave(self):
@@ -511,7 +527,10 @@ class IHM():
 
 
     def saveParameters(self):
-        print("Paramètres sauvegardés.")
+        print(self.temp_checkVarMP.get())
+        self.grid.multi_selection = self.temp_checkVarMP.get()
+        self.grid.nbImage = self.temp_nbGenImages.get()
+        self.grid.fusionMethod = self.temp_checkVarFus.get()
         self.disp_window.grab_release()
         self.disp_window.destroy()
     
