@@ -6,7 +6,7 @@ import numpy as np
 from CTkSpinbox import * 
 import io
 from code_gen_blend import *
-from autoencoder import *
+#from autoencoder import *
 
 #pip install customtkinter
 #pip install CTkListbox
@@ -143,8 +143,8 @@ class DynamicGrid():
         # On a obtenue les (ou la dans le cadre du premier test)
         elif (self.fusionMethod == "VAE"):
             print("Il me faut les mutations pour réaliser la fusions des codes")
-            pil_images = vae_generate_mutated_images(var_encoder, var_decoder, self.selected_images, new_to_show=self.nbImage, mutation_strength=0.5)
-            self.figures = self.resizeImages(self.figures)
+            #pil_images = vae_generate_mutated_images(var_encoder, var_decoder, self.selected_images, new_to_show=self.nbImage, mutation_strength=0.5)
+            #self.figures = self.resizeImages(self.figures)
         else:
             raise MethodError("Un mot clef incorrect a été utilisé pour le passage de génération")
     
@@ -251,7 +251,6 @@ class IHM():
         self.root.mainloop()
 
     def homePage(self):
-        self.images = ["image_0.png","image_2.png","image_4.png","image_6.png","image_8.png","image_10.png"]
 
         self.root.title("Le profiler des zencoders")
         self.root.geometry("960x590")
@@ -375,6 +374,7 @@ class IHM():
             "Straight_Hair": self.combobox_texture.get(),
             "Young": self.combobox_age.get(),
         }
+
         if "Sélectionner" in reponses.values():
             messagebox.showerror("", "Veuillez répondre à toutes les questions.")
         else:
@@ -383,8 +383,9 @@ class IHM():
             app.destroy()
 
         sample = self.chose_first_sample_photo(self.get_photos_matching_form(converted_reponses))
-            
-        return sample
+        list_sample = sample.tolist()
+        self.grid.links = list_sample
+        self.displayGrid()
 
     def conversion_reponses(self, reponses):
         conversions = {
