@@ -255,7 +255,7 @@ def generate_images_from_data(data, var_autoencoder, output_folder="image_file")
     os.makedirs(output_folder, exist_ok=True)
     image_paths = []
 
-    for n in range(0, 12, 2):
+    for n in range(0, 6):
         fig, ax = plt.subplots(figsize=(8, 8))
         image = var_autoencoder.predict(data[n])
 
@@ -324,7 +324,7 @@ def load_images_from_folder(folder, image_size=(128, 128)):
         img_path = os.path.join(folder, file)
         img = Image.open(img_path).convert('RGB')
         img = img.resize(image_size)
-        img_array = np.array(img) / 255.0  # Normalisation des valeurs RGB
+        img_array = np.array(img) / 255.0  
         images.append(img_array)
     
     return np.array(images)
@@ -389,7 +389,7 @@ def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", n
 
 
 
-#image_matrix_mod=vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=0.5, output_folder="image_file_mod")
+image_matrix_mod=vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=0.5, output_folder="image_file_mod")
 
 #print(image_matrix, np.shape(image_matrix),image_matrix_mod, np.shape(image_matrix_mod))
 
