@@ -16,3 +16,6 @@ pip install matplotlib
 pip install pandas
 pip install opencv-python
 pip install dlib
+pip install pandas
+pip install tensorflow
+pip install scikit-learn
