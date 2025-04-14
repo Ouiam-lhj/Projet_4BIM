@@ -123,6 +123,9 @@ class DynamicGrid():
         if k > len(self.images):
             raise IndexError
         return self.images[k]
+    
+    def setImage(self):
+        return self.nbImage
 
     def algoGen(self):
         # Fonction pour tout tester pour le moment.
@@ -157,21 +160,20 @@ class DynamicGrid():
     def displayImages(self, source = "LINK", add_to_history = False):
         # La frame doit être un objet CTkFrame
         # images est une liste d'images
-        if (self.images == []):
-            raise ImageDisplayError
         
         if (self.isEmpty == False):
             self.destroyGrid()
 
         images_displayed=0
 
-        nb_images = len(self.images)
+        nb_images = self.nbImage
         self.get_grid_dimensions(nb_images)
 
         width_frame = self.width/self.rows
         height_frame = self.height/self.columns
         
         images_size = max(width_frame/self.rows , height_frame/self.columns)
+
         if source == "LINK":
             self.loadImages(self.links)
             self.ToCTkImage(images_size,source)
@@ -181,6 +183,9 @@ class DynamicGrid():
             pass
         else:
             return
+
+        if (self.images == []):
+            raise ImageDisplayError
 
         print("Image à afficher : {}".format(self.images))
         for i in range(self.columns):
@@ -248,10 +253,11 @@ class IHM():
         self.root = CTk()
         self.homePage()
         set_appearance_mode("light")
+        self.grid.nbImage = 6
         self.root.mainloop()
 
     def homePage(self):
-
+        
         self.root.title("Le profiler des zencoders")
         self.root.geometry("960x590")
         self.root.resizable(False, False)
@@ -271,7 +277,7 @@ class IHM():
         self.menuExportButton = CTkButton(self.menuMainframe, text="Exporter", command=self.displayExportWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.menuParamButton = CTkButton(self.menuMainframe, text="Paramètres", command=self.displayParameterWindow, fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.photo = CTkButton(self.menuMainframe, text="Test", command= lambda : self.displayGrid(), fg_color="transparent", border_width = 0, hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
-        self.grid = DynamicGrid(self.images, self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
+        self.grid = DynamicGrid([], self.photosFrame, self.photosFrame.winfo_width() ,self.photosFrame.winfo_height())
         self.newGenButton = CTkButton(self.middleSideButtonFrame, width=100, height=35, text = "Nouvelle génération", command = lambda : self.grid.algoGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333')
         self.previousGenButton = CTkButton(self.middleSideButtonFrame, width=50, height=35, text = "←", command = lambda : self.previousGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333',state="disable")
         self.nextGenButton = CTkButton(self.middleSideButtonFrame, width=50, height=35, text = "→", command = lambda : self.nextGen(), fg_color="transparent", hover_color=['#e4e4eb', '#3a3b3d'], text_color='#333333', state="disable")
@@ -384,6 +390,7 @@ class IHM():
 
         sample = self.chose_first_sample_photo(self.get_photos_matching_form(converted_reponses))
         list_sample = sample.tolist()
+        list_sample = [f"img_align_celeba/{item}" for item in list_sample]
         self.grid.links = list_sample
         self.displayGrid()
 
