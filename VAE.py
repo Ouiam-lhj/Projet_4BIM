@@ -255,7 +255,7 @@ def generate_images_from_data(data, var_autoencoder, output_folder="image_file")
     os.makedirs(output_folder, exist_ok=True)
     image_paths = []
 
-    for n in range(0, 12, 2):
+    for n in range(0, 6):
         fig, ax = plt.subplots(figsize=(8, 8))
         image = var_autoencoder.predict(data[n])
 
@@ -303,6 +303,9 @@ def load_images_as_matrix(image_folder="image_file"):
 
     return image_matrix
 
+#image_matrix=load_images_as_matrix(image_folder="image_file")
+
+load_images_as_matrix(image_folder="image_file")
 
 #image_matrix = load_images_as_matrix("image_file")
 # for i in range(len(image_matrix)):
@@ -327,14 +330,14 @@ def load_images_from_folder(folder, image_size=(128, 128)):
     return np.array(images)
 
 
-def mutate_latent_vector(latent_vector, mutation_strength=0.5):
+def mutate_latent_vector(latent_vector, mutation_strength=3):
     """Applique une mutation aléatoire au vecteur latent."""
     mutation = np.random.normal(0, mutation_strength, latent_vector.shape)
     mutated_latent_vector = latent_vector + mutation
     return mutated_latent_vector
 
 
-def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=10, mutation_strength=0.5, output_folder="image_file_mod"):
+def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=3, output_folder="image_file_mod"):
     """
     Génère des versions mutées des images dans un dossier à partir de leurs vecteurs latents.
     
@@ -378,7 +381,6 @@ def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", n
         image_matrix_mod.append(img_array)
 
     image_matrix_mod = np.stack(image_matrix_mod)
-    print(image_matrix_mod)
 
     plt.show()
     
@@ -387,11 +389,12 @@ def vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", n
 
 
 
-vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=0.5, output_folder="image_file_mod")
+image_matrix_mod=vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_to_show=6, mutation_strength=3, output_folder="image_file_mod")
 
-
+#print(image_matrix, np.shape(image_matrix),image_matrix_mod, np.shape(image_matrix_mod))
 
 # def vae_generate_images(new_to_show=10):
+#   """ génération d'image nouvelle en créant un vecteur latent aléatoire"""
 #     random_codes = np.random.normal(size=(new_to_show, 200))
 #     new_faces = var_decoder.predict(np.array(random_codes))
 
@@ -404,7 +407,27 @@ vae_generate_mutated_images(var_encoder, var_decoder, folder="image_file", new_t
 #     plt.show()
 
 
-# vae_generate_images(10)
+#vae_generate_images(10)
 
 
+### entrainement de l'autoencodeur 
+# VAE_N_EPOCHS = 50
 
+# checkpoint_vae_best = ModelCheckpoint(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_best_model.h5'), 
+#                                       monitor='val_loss',
+#                                       mode='min',
+#                                       save_best_only=True,
+#                                       save_weights_only = True, 
+#                                       verbose=1)
+    
+# checkpoint_vae_last = ModelCheckpoint(os.path.join(WEIGHTS_FOLDER, 'VAE/vae_last_model.h5'),
+#                                       monitor='val_loss',
+#                                       mode='min',
+#                                       verbose=1,
+#                                       save_best_only=False,
+#                                       save_weights_only=True)
+
+# var_autoencoder.fit(train_dataset,
+#                     epochs=VAE_N_EPOCHS,
+#                     callbacks=[checkpoint_vae_best, checkpoint_vae_last],
+#                     validation_data=valid_dataset)
