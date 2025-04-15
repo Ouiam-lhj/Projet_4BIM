@@ -638,7 +638,7 @@ class IHM():
             sample = self.chose_first_sample_photo(self.get_photos_matching_form(converted_reponses))
             list_sample = sample.tolist()
             app.destroy()
-            list_sample = [f"img_align_celeba/{item}" for item in list_sample]
+            list_sample = [f"src/Zencoder_profiler/img_align_celeba/{item}" for item in list_sample]
             self.grid.links = list_sample
             self.displayGrid()
         except ValueError:
@@ -680,7 +680,7 @@ class IHM():
             - df_form : dataframe contenant les photos correspondant aux réponses
         """
         dropping = []
-        df_attr = pd.read_csv("final_dataset.txt" , sep = "\s+", header=0)
+        df_attr = pd.read_csv("src/Zencoder_profiler/final_dataset.txt" , sep = "\s+", header=0)
 
         for key, value in reponses.items():
             if value == 0:
