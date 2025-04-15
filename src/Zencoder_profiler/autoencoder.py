@@ -167,34 +167,21 @@ class VariableAutoencoder:
         output_vae = self.var_decoder_model(self.var_encoder_model(input_encoder))
         self.var_autoencoder_model = Model(input_encoder, output_vae, name ='variable_autoencoder')
 
-        reconstruction_loss = Lambda(
-        lambda inputs: binary_crossentropy(
-                tf.reshape(inputs[0], [-1]), tf.reshape(inputs[1], [-1])
-            ) * (128 * 128)
-        )([input_encoder, output_vae])
-
-        input_flat = tf.reshape(input_encoder, [-1])
-        output_flat = tf.reshape(output_vae, [-1])
-
-        # Calculate reconstruction loss
-        reconstruction_loss = binary_crossentropy(input_flat, output_flat) * (128 * 128)
+        reconstruction_loss = binary_crossentropy(input_encoder, output_vae) * (128 * 128)
         reconstruction_loss = K.mean(reconstruction_loss)
 
-        # Calculate KL divergence loss
         kl_loss = 1 + latent_log_var - K.square(latent_mu) - K.exp(latent_log_var)
         kl_loss = K.sum(kl_loss, axis=-1)
         kl_loss *= -0.5
 
-        # Combine reconstruction loss and KL divergence loss
         vae_loss = K.mean(reconstruction_loss + kl_loss)
 
-        # Add the loss to the model
-        self.var_autoencoder_model.add_loss(vae_loss)
+        self.var_autoencoder_model.add_loss(vae_loss)  
         self.var_autoencoder_model.add_metric(reconstruction_loss, name='reconstruction_loss')
         self.var_autoencoder_model.add_metric(kl_loss, name='kl_divergence_loss')
 
-        # Compile the model
-        optimizer = Adam(lr=self.learning_rate)
+        optimizer = Adam(lr = self.learning_rate)
+
         self.var_autoencoder_model.compile(optimizer=optimizer)
 
         return None
