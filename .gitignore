@@ -9,3 +9,4 @@ __pycache__
 __pycache/*
 env1
 test_image*
+dist/*
