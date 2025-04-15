@@ -289,7 +289,7 @@ def apply_random_blending(faces, k):
 #FONCTION QUI applique mutation ALEAT UNE LIST D'IMAGE ET la RENVOIE
 #####################################
 
-def mutation_aleatoire(image, proba=0.1):
+def mutation_aleatoire(image, proba=0.2):
     proba_rand = np.random.rand()
     if proba_rand>proba : return image
     attribut_rand = random.randint(1, 3)
