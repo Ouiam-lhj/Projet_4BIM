@@ -31,7 +31,7 @@ def align_face(img, landmarks_init, landmarks_fin, size=(256, 256)):
 def get_landmarks(image):
     """Récupère les 68 points caractéristiques du visage grâce au modèle de dlib."""
     detector = dlib.get_frontal_face_detector()
-    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+    predictor = dlib.shape_predictor("src/Zencoder_profiler/shape_predictor_68_face_landmarks.dat")
 
     image = np.array(image)
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -66,7 +66,7 @@ def apply_blur_around_face(image, landmarks, blur_strength):
     return combined_image
 
 
-def blend_faces(face1, face2, alpha=0.5):
+def blend_faces(face1, face2, alpha):
     """Fusionne deux visages avec un mélange pondéré (taux alpha)."""
     landmarks1 = get_landmarks(face1)
     landmarks2 = get_landmarks(face2)
@@ -289,7 +289,7 @@ def apply_random_blending(faces, k):
 #FONCTION QUI applique mutation ALEAT UNE LIST D'IMAGE ET la RENVOIE
 #####################################
 
-def mutation_aleatoire(image, proba=0.2):
+def mutation_aleatoire(image, proba=0.6):
     proba_rand = np.random.rand()
     if proba_rand>proba : return image
     attribut_rand = random.randint(1, 3)
