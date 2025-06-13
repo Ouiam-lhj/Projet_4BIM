@@ -1,14 +1,16 @@
-# Projet_4BIM
+# Zencoder's Profiler
 
-# Comment utiliser l'application 
+## Comment utiliser l'application 
 
 **Requis**
 
-- Afin de pouvoir utiliser l'interface, il est nécessaire d'avoir un appareil avec un système d'exploitation Linux.
+- Afin de pouvoir utiliser l'interface, il est nécessaire d'avoir un appareil avec un système d'exploitation Linux ou MacOS (le fichier de package requis est différents pour les utilisateurs MacOS, voir ci-dessous).
 - Nous vous recommandons l'installation d'une machine virtuel
 - Nous vous recommandons une version une version python entre 3.9 et 3.11
 
-## Installation et création de l'environnement virtuel
+Un problème a été identifié sur Windows avec cmake, causant des erreurs lors de l'installation de dlib.
+
+### Installation et création de l'environnement virtuel
 
 Dans un premier temps, cloner le git à l'aide de la fonction suivante
 ```bash
@@ -25,42 +27,22 @@ Il faut alors créer un environnement virtuel :
 $python3 -m venv virtual_environment
 ```
 
-## Package à installer si création d'un environnement manuellement
-Package à installer sur Windows :
-```
-pip install customtkinter
-pip install CTkListbox
-pip install Pillow
-pip install CTkSpinbox
-pip install numpy
-pip install matplotlib
-pip install opencv-python
-pip install dlib
-pip install pandas
-pip install tensorflow
-pip install scikit-learn
-```
-
-Package à installer sur MacOS
-```
-pip install customtkinter
-pip install CTkListbox
-pip install Pillow
-pip install CTkSpinbox
-pip install numpy
-pip install matplotlib
-pip install pandas
-pip install opencv-python
-pip install dlib
-pip install tensorflow-macos
-pip install tensorflow-metal
-pip install scikit-learn
-```
-
-Un environnement virtuel a été crée localement avec les packages, il vous suffit de l'activer :
+Il faudra ensuite l'activer afin d'isoler l'installation des packages :
 
 ```bash
 $source virtual_environment/bin/activate
+```
+
+L'installation des package se fait à l'aide du fichier `requirements.txt` pour les utilisateurs de Linux et `requirements_mos.txt` pour les utilisateurs de MacOS :
+
+```bash
+# Linux
+$pip install -r requirements.txt
+```
+
+```bash
+# MacOS
+$pip install -r requirements_mos.txt
 ```
 
 Il est ensuite de lancer directement l'interface à l'aide de la commande suivante (python ou python3 selon la version de python que vous possédez) :
@@ -69,9 +51,15 @@ Il est ensuite de lancer directement l'interface à l'aide de la commande suivan
 $python3 src/Zencoder_profiler/IHM.py
 ```
 
-# Liens database
+## Liens database
 
-Pour augmenter les photos disponibles sur l'interfaces, vous pouvez directement les télécharger depuis le site de celebA
+La base de donnée d'images CelebA a été utilisée pour alimenter la base de donnée fourni avec le logiciel. Pour obtenir plus d'images, veuillez consulter le site de Celeb A :
+
 
 Lien du dataset CelebA : http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+
+
 lien drive data: https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=0-5BR16BdXnb8hVj6CNHKzLg
+
+
+**Attention** : Les images d'individus de biais sont à éviter puisqu'elles causent des problèmes.

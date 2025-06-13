@@ -1,0 +1,13 @@
+customtkinter
+CTkListbox
+Pillow
+CTkSpinbox
+numpy
+matplotlib
+pandas
+opencv-python
+cmake
+dlib
+tensorflow-macos
+tensorflow-metal
+scikit-learn
